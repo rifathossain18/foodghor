@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Search, Truck, CheckCircle2, Clock, MapPin, Copy, Check, ExternalLink } from 'lucide-react';
+import { X, Search, Truck, CheckCircle2, Clock, MapPin, Copy, Check } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { Order } from '../types';
 
@@ -37,7 +37,6 @@ export const OrderTrackingModal: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 relative animate-in fade-in zoom-in-95 duration-200">
-        {/* Close Button */}
         <button
           onClick={() => {
             setIsTrackingOpen(false);
@@ -50,20 +49,18 @@ export const OrderTrackingModal: React.FC = () => {
           <X className="w-5 h-5" />
         </button>
 
-        {/* Modal Header */}
         <div className="text-center max-w-md mx-auto mb-6">
           <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto mb-3">
             <Truck className="w-6 h-6" />
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-stone-900 font-serif">
-            লাইভ অর্ডার ও কুরিয়ার ট্র্যাকিং
+            লাইভ অর্ডার ও কুরিয়ার ট্র্যাকিং
           </h2>
           <p className="text-xs text-stone-500 mt-1">
-            আপনার অর্ডার নম্বর (যেমন: FG-9842) অথবা মোবাইল নম্বর দিয়ে পার্সেল ট্র্যাক করুন
+            আপনার অর্ডার নম্বর (যেমন: FG-9842) অথবা মোবাইল নম্বর দিয়ে পার্সেল ট্র্যাক করুন
           </p>
         </div>
 
-        {/* Search Input Form */}
         <form onSubmit={handleSearch} className="flex gap-2 max-w-lg mx-auto mb-8">
           <div className="relative flex-1">
             <input
@@ -84,28 +81,22 @@ export const OrderTrackingModal: React.FC = () => {
           </button>
         </form>
 
-        {/* Search Result Display */}
         {hasSearched && (
           <div>
             {!matchedOrder ? (
               <div className="p-6 rounded-2xl bg-stone-50 text-center border border-stone-200">
                 <Clock className="w-8 h-8 text-stone-400 mx-auto mb-2" />
-                <h4 className="font-bold text-stone-800 text-sm">কোনো অর্ডার পাওয়া যায়নি</h4>
+                <h4 className="font-bold text-stone-800 text-sm">কোনো অর্ডার পাওয়া যায়নি</h4>
                 <p className="text-xs text-stone-500 mt-1">
-                  অনুগ্রহ করে আপনার সঠিক অর্ডার আইডি অথবা অর্ডার করার সময় দেওয়া মোবাইল নম্বরটি লিখুন।
+                  অনুগ্রহ করে আপনার সঠিক অর্ডার আইডি অথবা অর্ডার করার সময় দেওয়া মোবাইল নম্বরটি লিখুন।
                 </p>
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Parcel Summary Card */}
                 <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <span className="text-[11px] font-semibold text-stone-500 uppercase">
-                      অর্ডার নম্বর
-                    </span>
-                    <h3 className="text-lg font-black text-stone-900 font-mono">
-                      #{matchedOrder.id}
-                    </h3>
+                    <span className="text-[11px] font-semibold text-stone-500 uppercase">অর্ডার নম্বর</span>
+                    <h3 className="text-lg font-black text-stone-900 font-mono">#{matchedOrder.id}</h3>
                     <p className="text-xs text-stone-600 mt-0.5">
                       গ্রাহক: <span className="font-semibold">{matchedOrder.customerName}</span> (
                       {matchedOrder.customerCity === 'Inside Dhaka' ? 'ঢাকা' : 'ঢাকার বাইরে'})
@@ -113,13 +104,9 @@ export const OrderTrackingModal: React.FC = () => {
                   </div>
 
                   <div className="flex flex-col sm:items-end">
-                    <span className="text-[11px] font-semibold text-stone-500 uppercase">
-                      কুরিয়ার পার্টনার
-                    </span>
+                    <span className="text-[11px] font-semibold text-stone-500 uppercase">কুরিয়ার পার্টনার</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-stone-900 text-sm">
-                        {matchedOrder.courierName} কুরিয়ার
-                      </span>
+                      <span className="font-bold text-stone-900 text-sm">{matchedOrder.courierName} কুরিয়ার</span>
                       {matchedOrder.trackingCode && (
                         <button
                           onClick={() => handleCopy(matchedOrder.trackingCode!)}
@@ -135,21 +122,15 @@ export const OrderTrackingModal: React.FC = () => {
                         </button>
                       )}
                     </div>
-                    <span className="text-xs font-bold text-emerald-800 mt-0.5">
-                      স্ট্যাটাস: {matchedOrder.status}
-                    </span>
+                    <span className="text-xs font-bold text-emerald-800 mt-0.5">স্ট্যাটাস: {matchedOrder.status}</span>
                   </div>
                 </div>
 
-                {/* Progress Journey Steps */}
                 <div className="border border-stone-200 rounded-2xl p-5 bg-white">
-                  <h4 className="font-bold text-stone-900 text-sm mb-4">
-                    পার্সেল লাইভ ট্র্যাকিং টাইমলাইন:
-                  </h4>
+                  <h4 className="font-bold text-stone-900 text-sm mb-4">পার্সেল লাইভ ট্র্যাকিং টাইমলাইন:</h4>
                   <div className="space-y-4">
                     {matchedOrder.trackingHistory.map((step, idx) => (
                       <div key={idx} className="flex items-start gap-3 relative">
-                        {/* Vertical line */}
                         {idx !== matchedOrder.trackingHistory.length - 1 && (
                           <div className="absolute left-3.5 top-6 bottom-0 w-0.5 bg-emerald-200 -z-0" />
                         )}
@@ -158,12 +139,8 @@ export const OrderTrackingModal: React.FC = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline justify-between gap-2">
-                            <h5 className="font-bold text-stone-900 text-xs sm:text-sm">
-                              {step.status}
-                            </h5>
-                            <span className="text-[10px] sm:text-xs text-stone-400 font-mono">
-                              {step.timestamp}
-                            </span>
+                            <h5 className="font-bold text-stone-900 text-xs sm:text-sm">{step.status}</h5>
+                            <span className="text-[10px] sm:text-xs text-stone-400 font-mono">{step.timestamp}</span>
                           </div>
                           <p className="text-xs text-stone-600 mt-0.5 font-sans">{step.note}</p>
                           {step.location && (
@@ -178,26 +155,20 @@ export const OrderTrackingModal: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Ordered Items Summary */}
                 <div className="p-4 rounded-xl bg-stone-50 border border-stone-200">
                   <h5 className="font-bold text-xs text-stone-700 mb-2">অর্ডারের আইটেমসমূহ:</h5>
                   <div className="space-y-1.5 text-xs">
                     {matchedOrder.items.map((item, i) => (
                       <div key={i} className="flex justify-between text-stone-800">
                         <span>
-                          {item.banglaName || item.productName} ({item.packageName || '১x'}) x{' '}
-                          {item.quantity}
+                          {item.banglaName || item.productName} ({item.packageName || '১x'}) x {item.quantity}
                         </span>
-                        <span className="font-bold">
-                          ৳{(item.price * item.quantity).toLocaleString()}
-                        </span>
+                        <span className="font-bold">৳{(item.price * item.quantity).toLocaleString()}</span>
                       </div>
                     ))}
                     <div className="pt-2 border-t border-stone-200 flex justify-between font-bold text-stone-900">
                       <span>মোট পরিশোধযোগ্য (ক্যাশ অন ডেলিভারি):</span>
-                      <span className="text-emerald-900 font-black">
-                        ৳{matchedOrder.total.toLocaleString()}
-                      </span>
+                      <span className="text-emerald-900 font-black">৳{matchedOrder.total.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>

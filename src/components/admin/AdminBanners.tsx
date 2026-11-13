@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Eye, Image as ImageIcon, Save, CheckCircle, AlertCircle, Upload } from 'lucide-react';
-import { useStore } from '../../context/StoreContext';
-import { Banner } from '../../types';
-import { ImageUploadDropzone } from '../common/ImageUploadDropzone';
+import React, { useState } from "react";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Eye,
+  Image as ImageIcon,
+  Save,
+  CheckCircle,
+  AlertCircle,
+  Upload,
+} from "lucide-react";
+import { useStore } from "../../context/StoreContext";
+import { Banner } from "../../types";
+import { ImageUploadDropzone } from "../common/ImageUploadDropzone";
+import { resolveImageUrl } from "../../lib/imagePath";
 
 export const AdminBanners: React.FC = () => {
   const { banners, updateBanner, addBanner, deleteBanner } = useStore();
@@ -10,26 +21,26 @@ export const AdminBanners: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const presetImages = [
-    { label: 'ফুডঘর প্রিমিয়াম আর্ট স্প্রেড', url: '/src/assets/images/hero_foodghor_gourmet_honey_ghee_1794499288257.jpg' },
-    { label: 'সুন্দরবনের খাঁটি মধু', url: '/src/assets/images/product_sundarban_raw_honey_1794499288912.jpg' },
-    { label: 'পাবনার সুবাসিত ঘি', url: '/src/assets/images/product_pure_cow_ghee_1794499290154.jpg' },
-    { label: 'ঘানি ভাঙা সরিষার তেল', url: '/src/assets/images/product_cold_pressed_mustard_oil_1794499290697.jpg' },
-    { label: 'রয়্যাল ড্রাই ফ্রুটস কম্বো', url: '/src/assets/images/product_premium_dryfruits_combo_1794499290032.jpg' },
+    { label: "ফুডঘর প্রিমিয়াম আর্ট স্প্রেড", url: "/images/hero_foodghor_gourmet_honey_ghee_1794499288257.jpg" },
+    { label: "সুন্দরবনের খাঁটি মধু", url: "/images/product_sundarban_raw_honey_1794499288912.jpg" },
+    { label: "পাবনার সুবাসিত ঘি", url: "/images/product_pure_cow_ghee_1794499290154.jpg" },
+    { label: "ঘানি ভাঙা সরিষার তেল", url: "/images/product_cold_pressed_mustard_oil_1794499290697.jpg" },
+    { label: "রয়্যাল ড্রাই ফ্রুটস কম্বো", url: "/images/product_premium_dryfruits_combo_1794499290032.jpg" },
   ];
 
   const handleAddNew = () => {
     if (banners.length >= 5) {
-      alert('সর্বোচ্চ ৫ টি ব্যানার ফটো যুক্ত করা যাবে। যেকোনো একটি ব্যানার ডিলিট করে নতুন ব্যানার দিন।');
+      alert("সর্বোচ্চ ৫ টি ব্যানার ফটো যুক্ত করা যাবে। যেকোনো একটি ব্যানার ডিলিট করে নতুন ব্যানার দিন।");
       return;
     }
     const newB: Banner = {
       id: `b-${Date.now()}`,
-      title: 'নতুন আকর্ষণীয় ফুড অফার',
-      subtitle: 'প্রাকৃতিক ও নির্ভেজাল খাবারের সাথে থাকুন প্রতিদিন।',
-      tag: 'নতুন কালেকশন',
+      title: "নতুন আকর্ষণীয় ফুড অফার",
+      subtitle: "প্রাকৃতিক ও নির্ভেজাল খাবারের সাথে থাকুন প্রতিদিন।",
+      tag: "নতুন কালেকশন",
       imageUrl: presetImages[0].url,
-      linkUrl: '#products',
-      buttonText: 'অর্ডার করতে ক্লিক করুন',
+      linkUrl: "#products",
+      buttonText: "অর্ডার করতে ক্লিক করুন",
       active: true,
       order: banners.length + 1,
     };
@@ -56,7 +67,7 @@ export const AdminBanners: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner Control Header */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-stone-200">
         <div>
           <div className="flex items-center gap-2">
@@ -68,7 +79,7 @@ export const AdminBanners: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-stone-500 mt-1">
-            মেইন হোমপেজের হরাইজন্টাল স্লাইডার ব্যানার ম্যানেজ করুন। গ্রাহকরা এগুলো সাইড দিয়ে স্লাইড করে দেখতে পাবেন।
+            মেইন হোমপেজের হরাইজন্টাল স্লাইডার ব্যানার ম্যানেজ করুন। গ্রাহকরা এগুলো সাইড দিয়ে স্লাইড করে দেখতে পাবেন।
           </p>
         </div>
 
@@ -77,8 +88,8 @@ export const AdminBanners: React.FC = () => {
           disabled={banners.length >= 5}
           className={`px-5 py-3 text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-2 shrink-0 ${
             banners.length >= 5
-              ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
-              : 'bg-emerald-800 hover:bg-emerald-900 text-white cursor-pointer'
+              ? "bg-stone-300 text-stone-500 cursor-not-allowed"
+              : "bg-emerald-800 hover:bg-emerald-900 text-white cursor-pointer"
           }`}
         >
           <Plus className="w-4 h-4" />
@@ -94,10 +105,9 @@ export const AdminBanners: React.FC = () => {
             className="bg-white rounded-2xl overflow-hidden border border-stone-200 shadow-sm flex flex-col justify-between"
           >
             <div>
-              {/* Image Preview */}
               <div className="relative aspect-[16/9] bg-stone-100 overflow-hidden">
                 <img
-                  src={banner.imageUrl}
+                  src={resolveImageUrl(banner.imageUrl)}
                   alt={banner.title}
                   className="w-full h-full object-cover"
                 />
@@ -108,16 +118,13 @@ export const AdminBanners: React.FC = () => {
                 <button
                   onClick={() => updateBanner({ ...banner, active: !banner.active })}
                   className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-md cursor-pointer ${
-                    banner.active
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-stone-600 text-stone-200'
+                    banner.active ? "bg-emerald-600 text-white" : "bg-stone-600 text-stone-200"
                   }`}
                 >
-                  {banner.active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
+                  {banner.active ? "সক্রিয়" : "নিষ্ক্রিয়"}
                 </button>
               </div>
 
-              {/* Text Info */}
               <div className="p-4 space-y-2">
                 {banner.tag && (
                   <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-block">
@@ -135,7 +142,6 @@ export const AdminBanners: React.FC = () => {
               </div>
             </div>
 
-            {/* Actions */}
             <div className="p-3 bg-stone-50 border-t border-stone-200 flex items-center justify-end gap-2">
               <button
                 onClick={() => handleEdit(banner)}
@@ -165,9 +171,7 @@ export const AdminBanners: React.FC = () => {
         <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/75 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-stone-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-stone-200">
-              <h3 className="font-bold text-stone-900 text-base font-serif">
-                ক্যারোসেল ব্যানার এডিটর
-              </h3>
+              <h3 className="font-bold text-stone-900 text-base font-serif">ক্যারোসেল ব্যানার এডিটর</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-stone-400 hover:text-stone-700 text-sm font-bold"
@@ -212,9 +216,7 @@ export const AdminBanners: React.FC = () => {
                   <input
                     type="text"
                     value={editingBanner.buttonText}
-                    onChange={(e) =>
-                      setEditingBanner({ ...editingBanner, buttonText: e.target.value })
-                    }
+                    onChange={(e) => setEditingBanner({ ...editingBanner, buttonText: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs"
                   />
                 </div>
@@ -233,13 +235,10 @@ export const AdminBanners: React.FC = () => {
                 />
               </div>
 
-              {/* Banner Photo Upload */}
               <div>
                 <ImageUploadDropzone
                   value={editingBanner.imageUrl}
-                  onChange={(dataUrl) =>
-                    setEditingBanner({ ...editingBanner, imageUrl: dataUrl })
-                  }
+                  onChange={(dataUrl) => setEditingBanner({ ...editingBanner, imageUrl: dataUrl })}
                   label="ব্যানার ফটো আপলোড (File Upload / Drag & Drop)"
                   helperText="১৬:৯ অনুপাতে ডিভাইসের ফটো আপলোড করুন"
                   aspectRatio="16:9"
@@ -251,12 +250,10 @@ export const AdminBanners: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={editingBanner.active}
-                    onChange={(e) =>
-                      setEditingBanner({ ...editingBanner, active: e.target.checked })
-                    }
+                    onChange={(e) => setEditingBanner({ ...editingBanner, active: e.target.checked })}
                     className="w-4 h-4 text-emerald-800 rounded"
                   />
-                  <span className="font-bold text-stone-800">ব্যানারটি সক্রিয় রাখুন</span>
+                  <span className="font-bold text-stone-800">ব্যানারটি সক্রিয় রাখুন</span>
                 </label>
               </div>
             </div>

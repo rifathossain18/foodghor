@@ -2,6 +2,7 @@ import React from 'react';
 import { ShoppingBag, Star, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Product } from '../types';
 import { useStore } from '../context/StoreContext';
+import { resolveImageUrl } from '../lib/imagePath';
 
 interface ProductCardProps {
   product: Product;
@@ -30,24 +31,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       onClick={() => navigate(`/product/${product.slug}`)}
       className="group bg-white rounded-2xl overflow-hidden border border-stone-200/80 hover:border-emerald-600/40 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer"
     >
-      {/* Image Container */}
       <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden">
         <img
-          src={product.image}
+          src={resolveImageUrl(product.image)}
           alt={product.banglaName}
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
           referrerPolicy="no-referrer"
         />
 
-        {/* Discount Tag */}
         {discountPercent > 0 && (
           <div className="absolute top-3 left-3 bg-amber-500 text-stone-950 font-bold text-xs px-2.5 py-1 rounded-lg shadow-sm">
-            {discountPercent}% ছাড় (৳{discountAmount})
+            {discountPercent}% ছাড় (৳{discountAmount})
           </div>
         )}
 
-        {/* Stock Status Badge */}
         {product.inStock ? (
           <div className="absolute top-3 right-3 bg-emerald-900/80 backdrop-blur-sm text-emerald-200 text-[11px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3 text-emerald-400" />
@@ -60,16 +58,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         )}
       </div>
 
-      {/* Details Body */}
       <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
         <div>
-          {/* Category & Unit */}
           <div className="flex items-center justify-between text-xs text-stone-500 mb-1 font-medium">
             <span className="text-emerald-800 font-semibold">{product.category}</span>
             <span>পরিমাণ: {product.unit}</span>
           </div>
 
-          {/* Product Title */}
           <h3 className="text-lg font-bold text-stone-900 group-hover:text-emerald-800 transition-colors line-clamp-1 font-serif">
             {product.banglaName}
           </h3>
@@ -77,7 +72,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {product.name}
           </p>
 
-          {/* Ratings */}
           <div className="flex items-center gap-1.5 mt-2 text-xs text-stone-600">
             <div className="flex items-center text-amber-500">
               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
@@ -90,7 +84,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         </div>
 
-        {/* Pricing & Actions */}
         <div className="pt-2 border-t border-stone-100">
           <div className="flex items-baseline gap-2 mb-3">
             <span className="text-2xl font-black text-stone-950 font-sans tracking-tight">

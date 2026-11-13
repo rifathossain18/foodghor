@@ -12,6 +12,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
+import { resolveImageUrl } from '../../lib/imagePath';
 
 interface AdminDashboardProps {
   onNavigateTab: (tab: string) => void;
@@ -275,7 +276,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateTab })
                 className="flex items-center gap-3 p-2 rounded-xl hover:bg-stone-50 transition-colors cursor-pointer"
               >
                 <img
-                  src={p.image}
+                  src={resolveImageUrl(p.image)}
                   alt={p.banglaName}
                   className="w-12 h-12 object-cover rounded-lg bg-stone-100 border border-stone-200"
                 />

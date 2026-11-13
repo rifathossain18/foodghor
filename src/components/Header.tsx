@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { resolveImageUrl } from '../lib/imagePath';
 
 export const Header: React.FC = () => {
   const {
@@ -74,7 +75,7 @@ export const Header: React.FC = () => {
         >
           {settings.logoUrl ? (
             <img
-              src={settings.logoUrl}
+              src={resolveImageUrl(settings.logoUrl)}
               alt={settings.storeName}
               className="h-9 sm:h-12 w-auto object-contain max-w-[120px] sm:max-w-[160px]"
               onError={(e) => {
@@ -401,7 +402,7 @@ export const Header: React.FC = () => {
                       className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-stone-50 cursor-pointer border border-transparent hover:border-stone-200 transition-all"
                     >
                       <img
-                        src={p.image}
+                        src={resolveImageUrl(p.image)}
                         alt={p.banglaName}
                         className="w-14 h-14 object-cover rounded-lg bg-stone-100"
                       />

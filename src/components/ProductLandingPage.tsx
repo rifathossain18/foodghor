@@ -24,6 +24,7 @@ import {
 import { Product, ProductPackage } from '../types';
 import { useStore } from '../context/StoreContext';
 import { CustomerReviews } from './reviews/CustomerReviews';
+import { resolveImageUrl } from '../lib/imagePath';
 
 interface ProductLandingPageProps {
   product: Product;
@@ -41,7 +42,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
   } = useStore();
   const cfg = product.landingConfig;
 
-  // Selected package state
   const defaultPackage =
     cfg.packages?.find((p) => p.popular) || cfg.packages?.[0] || {
       id: 'default',
@@ -55,7 +55,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
   const [activeImage, setActiveImage] = useState<string>(product.image);
   const [quantity, setQuantity] = useState(1);
 
-  // Form Fields (Pre-filled if logged in)
   const [customerName, setCustomerName] = useState(currentUser?.name || '');
   const [customerPhone, setCustomerPhone] = useState(currentUser?.phone || '');
   const [customerEmail, setCustomerEmail] = useState(currentUser?.email || '');
@@ -67,7 +66,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
-  // Synchronize when currentUser changes
   useEffect(() => {
     if (currentUser) {
       if (!customerName) setCustomerName(currentUser.name);
@@ -78,10 +76,9 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
     }
   }, [currentUser]);
 
-  // Dynamic Urgency Countdown Timer
   const [timeLeft, setTimeLeft] = useState((cfg.countdownMinutes || 45) * 60);
   const [liveViewers, setLiveViewers] = useState(42);
-  const [stockLeft, setStockLeft] = useState(7);
+  const [stockLeft] = useState(7);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -109,7 +106,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
 
   const { minutes, seconds } = formatTimer(timeLeft);
 
-  // Fire ViewContent pixel on mount
   useEffect(() => {
     firePixelEvent('ViewContent', {
       productName: product.name,
@@ -119,7 +115,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
     });
   }, [product.id, selectedPackage.price]);
 
-  // Pricing calculations
   const deliveryFee =
     deliveryArea === 'Inside Dhaka'
       ? courierConfig.insideDhakaRate
@@ -128,8 +123,8 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
   const subtotal = selectedPackage.price * quantity;
   const grandTotal = subtotal + deliveryFee;
 
-  // Form submission with MANDATORY customer account creation
-  const handleOrderSubmit = (e: React.FormEvent) => {
+  // ⚠️ ASYNC: registerUser now awaits D1 save
+  const handleOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
 
@@ -153,10 +148,9 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
     setIsSubmitting(true);
 
     try {
-      // 1. Ensure user profile is registered/updated
       let user = currentUser;
       if (!user) {
-        user = registerUser(
+        user = await registerUser(
           customerName.trim(),
           customerPhone.trim(),
           customerEmail.trim(),
@@ -165,7 +159,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
         );
       }
 
-      // 2. Place Order linked to User
       placeOrder({
         userId: user.id,
         customerName: customerName.trim(),
@@ -193,7 +186,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
         courierName: courierConfig.defaultCourier,
       });
 
-      // Clear non-user fields
       setCustomerNote('');
     } finally {
       setIsSubmitting(false);
@@ -206,10 +198,9 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
 
   return (
     <div className="bg-[#FAF9F5] text-stone-900 min-h-screen pb-20 lg:pb-0">
-      {/* 1. Dynamic Urgency Countdown & 'Limited Time Offer' Banner */}
+      {/* 1. Urgency Countdown */}
       <div className="bg-gradient-to-r from-amber-600 via-emerald-800 to-amber-700 text-white py-2.5 sm:py-3 px-3 sm:px-4 lg:sticky lg:top-20 z-30 shadow-lg">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
-          {/* Urgency Message */}
           <div className="flex items-center gap-2 font-bold">
             <span className="flex h-2.5 w-2.5 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75" />
@@ -219,7 +210,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
             <span>আজকের অর্ডারে বিশেষ ডিসকাউন্ট ও ফ্রি গিফট!</span>
           </div>
 
-          {/* Countdown Clock + Viewers */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 bg-stone-950/40 px-3 py-1 rounded-xl border border-white/10 font-bold">
               <Clock className="w-4 h-4 text-amber-300 animate-pulse" />
@@ -242,14 +232,12 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
       {/* 2. Hero Sales Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          {/* Left Column: Visual Showcase & Package Selector (lg: 7 cols) */}
           <div className="lg:col-span-7 space-y-6">
-            {/* Badges and Main Headline */}
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-bold border border-emerald-200">
                   <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                  <span>{cfg.heroBadge || '১০০% খাঁটি ও প্রিমিয়াম ফুড'}</span>
+                  <span>{cfg.heroBadge || '১০০% খাঁটি ও প্রিমিয়াম ফুড'}</span>
                 </div>
                 <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-xs font-bold">
                   <Flame className="w-3.5 h-3.5 text-rose-600" />
@@ -265,22 +253,20 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
               </p>
             </div>
 
-            {/* Main Image Showcase */}
             <div className="bg-white rounded-3xl p-3 border border-stone-200/90 shadow-md">
               <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100">
                 <img
-                  src={activeImage}
+                  src={resolveImageUrl(activeImage)}
                   alt={product.banglaName}
                   className="w-full h-full object-cover object-center transition-all duration-300"
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute bottom-3 left-3 bg-stone-900/80 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-medium">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>ফুডঘর অরিজিনাল কোয়ালিটি সার্টিফাইড</span>
+                  <span>ফুডঘর অরিজিনাল কোয়ালিটি সার্টিফাইড</span>
                 </div>
               </div>
 
-              {/* Thumbnail Switcher */}
               {product.galleryImages && product.galleryImages.length > 1 && (
                 <div className="flex items-center gap-3 mt-3 overflow-x-auto pb-1">
                   {product.galleryImages.map((img, idx) => (
@@ -293,19 +279,18 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                           : 'border-transparent opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
+                      <img src={resolveImageUrl(img)} alt="Thumbnail" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Package / Weight Selection Cards */}
             <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-base sm:text-lg text-stone-900 flex items-center gap-2">
                   <PackageCheck className="w-5 h-5 text-emerald-700" />
-                  <span>প্যাকেজ নির্বাচন করুন (বেশি পরিমাণে অতিরিক্ত ছাড়!)</span>
+                  <span>প্যাকেজ নির্বাচন করুন (বেশি পরিমাণে অতিরিক্ত ছাড়!)</span>
                 </h3>
               </div>
 
@@ -346,13 +331,11 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                       <div className="mt-3 pt-2 border-t border-stone-200/60">
                         <div className="flex items-baseline gap-1.5">
                           <span className="text-lg font-black text-emerald-900">৳{pkg.price}</span>
-                          <span className="text-xs text-stone-400 line-through">
-                            ৳{pkg.regularPrice}
-                          </span>
+                          <span className="text-xs text-stone-400 line-through">৳{pkg.regularPrice}</span>
                         </div>
                         {discount > 0 && (
                           <span className="text-[11px] font-semibold text-amber-700 block mt-0.5">
-                            সাশ্রয়: ৳{discount}
+                            সাশ্রয়: ৳{discount}
                           </span>
                         )}
                       </div>
@@ -362,7 +345,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
               </div>
             </div>
 
-            {/* Quick Sourcing Highlights */}
             <div className="bg-emerald-950 text-emerald-50 rounded-3xl p-6 shadow-lg border border-emerald-900">
               <h3 className="text-base sm:text-lg font-bold text-amber-300 mb-4 flex items-center gap-2">
                 <Award className="w-5 h-5 text-amber-400" />
@@ -379,10 +361,9 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
             </div>
           </div>
 
-          {/* Right Column: 1-Click Fast Checkout Form with Mandatory Account Creation */}
+          {/* Right: Order Form */}
           <div id="order-form-section" className="lg:col-span-5 lg:sticky lg:top-36 z-20">
             <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border-2 border-emerald-700 ring-4 ring-emerald-700/10">
-              {/* Form Header */}
               <div className="text-center pb-5 border-b border-stone-200">
                 <span className="bg-amber-400 text-stone-950 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full inline-block mb-2 shadow-sm">
                   ক্যাশ অন ডেলিভারি ফর্ম
@@ -391,11 +372,10 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                   অর্ডার করতে নিচের তথ্য দিন
                 </h2>
                 <p className="text-xs text-stone-600 mt-1">
-                  নিরাপদ অর্ডার ও ডেলিভারি ট্র্যাকিংয়ের জন্য কাস্টমার প্রোফাইল তৈরি হবে।
+                  নিরাপদ অর্ডার ও ডেলিভারি ট্র্যাকিংয়ের জন্য কাস্টমার প্রোফাইল তৈরি হবে।
                 </p>
               </div>
 
-              {/* Logged in User Bar if authenticated */}
               {currentUser ? (
                 <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2 text-emerald-900 font-semibold">
@@ -413,11 +393,10 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
               ) : (
                 <div className="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-center text-[11px] text-amber-900 font-medium flex items-center justify-center gap-1.5">
                   <Lock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                  <span>অর্ডার করার সময় আপনার নামে স্বয়ংক্রিয় কাস্টমার একাউন্ট তৈরি হবে</span>
+                  <span>অর্ডার করার সময় আপনার নামে স্বয়ংক্রিয় কাস্টমার একাউন্ট তৈরি হবে</span>
                 </div>
               )}
 
-              {/* Form Validation Error */}
               {formError && (
                 <div className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-semibold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
@@ -425,9 +404,7 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                 </div>
               )}
 
-              {/* Checkout Form */}
               <form onSubmit={handleOrderSubmit} className="mt-5 space-y-3.5">
-                {/* Name */}
                 <div>
                   <label className="block text-xs font-bold text-stone-800 mb-1">
                     আপনার নাম <span className="text-rose-600">*</span>
@@ -445,7 +422,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                   </div>
                 </div>
 
-                {/* Phone */}
                 <div>
                   <label className="block text-xs font-bold text-stone-800 mb-1">
                     মোবাইল নম্বর (১১ ডিজিট) <span className="text-rose-600">*</span>
@@ -463,7 +439,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                   </div>
                 </div>
 
-                {/* Email (Mandatory as requested) */}
                 <div>
                   <label className="block text-xs font-bold text-stone-800 mb-1">
                     ইমেইল এড্রেস (অ্যাকাউন্ট ও মেমোর জন্য) <span className="text-rose-600">*</span>
@@ -481,7 +456,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                   </div>
                 </div>
 
-                {/* Address */}
                 <div>
                   <label className="block text-xs font-bold text-stone-800 mb-1">
                     সম্পূর্ণ ডেলিভারি ঠিকানা <span className="text-rose-600">*</span>
@@ -496,7 +470,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                   />
                 </div>
 
-                {/* Delivery Zone Selector */}
                 <div>
                   <label className="block text-xs font-bold text-stone-800 mb-1">
                     ডেলিভারি এরিয়া বেছে নিন <span className="text-rose-600">*</span>
@@ -534,7 +507,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                   </div>
                 </div>
 
-                {/* Quantity Stepper */}
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-stone-100/70 border border-stone-200">
                   <span className="text-xs font-bold text-stone-800">অর্ডারের পরিমাণ:</span>
                   <div className="flex items-center gap-3">
@@ -545,9 +517,7 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                     >
                       -
                     </button>
-                    <span className="font-bold text-stone-900 text-sm font-sans w-6 text-center">
-                      {quantity}
-                    </span>
+                    <span className="font-bold text-stone-900 text-sm font-sans w-6 text-center">{quantity}</span>
                     <button
                       type="button"
                       onClick={() => setQuantity((q) => q + 1)}
@@ -558,19 +528,14 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                   </div>
                 </div>
 
-                {/* Bill Summary Breakdown */}
                 <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-1.5 text-xs text-stone-700">
                   <div className="flex justify-between">
                     <span>নির্বাচিত পণ্য:</span>
-                    <span className="font-bold text-stone-900 truncate max-w-[200px]">
-                      {product.banglaName}
-                    </span>
+                    <span className="font-bold text-stone-900 truncate max-w-[200px]">{product.banglaName}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>প্যাকেজ:</span>
-                    <span className="font-semibold text-stone-900">
-                      {selectedPackage.name} ({quantity}x)
-                    </span>
+                    <span className="font-semibold text-stone-900">{selectedPackage.name} ({quantity}x)</span>
                   </div>
                   <div className="flex justify-between">
                     <span>পণ্যের মূল্য:</span>
@@ -581,12 +546,11 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                     <span className="font-bold text-stone-900">৳{deliveryFee}</span>
                   </div>
                   <div className="pt-2 border-t border-amber-300/60 flex justify-between items-baseline text-sm font-extrabold text-stone-950">
-                    <span>সর্বমোট প্রদেয়:</span>
+                    <span>সর্বমোট প্রদেয়:</span>
                     <span className="text-lg text-emerald-900">৳{grandTotal.toLocaleString()}</span>
                   </div>
                 </div>
 
-                {/* Primary Submit CTA Button */}
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -601,7 +565,6 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                   <ArrowRight className="w-5 h-5" />
                 </button>
 
-                {/* Direct WhatsApp Order Option */}
                 <a
                   href={`https://wa.me/88${settings.whatsapp}?text=${encodeURIComponent(
                     `হ্যালো ফুডঘর! আমি "${product.banglaName} (${selectedPackage.name})" অর্ডার করতে চাই।`
@@ -611,13 +574,12 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                   className="w-full py-2.5 px-4 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] text-xs font-bold rounded-xl border border-[#25D366]/30 flex items-center justify-center gap-2 transition-colors"
                 >
                   <MessageCircle className="w-4 h-4 fill-[#25D366] text-[#25D366]" />
-                  <span>হোয়াটসঅ্যাপে সরাসরি অর্ডার করুন</span>
+                  <span>হোয়াটসঅ্যাপে সরাসরি অর্ডার করুন</span>
                 </a>
 
-                {/* Guarantee Note */}
                 <div className="pt-2 text-center text-[11px] text-stone-500 flex items-center justify-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                  <span>পণ্য হাতে পেয়ে দেখে শতভাগ নিশ্চিত হয়ে মূল্য দিন</span>
+                  <span>পণ্য হাতে পেয়ে দেখে শতভাগ নিশ্চিত হয়ে মূল্য দিন</span>
                 </div>
               </form>
             </div>
@@ -634,7 +596,7 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
                 <Truck className="w-6 h-6" />
               </div>
               <h4 className="font-bold text-stone-900 text-sm">সরাসরি ক্যাশ অন ডেলিভারি</h4>
-              <p className="text-xs text-stone-500 mt-0.5">পণ্য হাতে পেয়ে মূল্য দিন</p>
+              <p className="text-xs text-stone-500 mt-0.5">পণ্য হাতে পেয়ে মূল্য দিন</p>
             </div>
 
             <div className="flex flex-col items-center p-3">
@@ -649,7 +611,7 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
               <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center mb-2">
                 <RotateCcw className="w-6 h-6" />
               </div>
-              <h4 className="font-bold text-stone-900 text-sm">ইনস্ট্যান্ট রিটার্ন নিশ্চয়তা</h4>
+              <h4 className="font-bold text-stone-900 text-sm">ইনস্ট্যান্ট রিটার্ন নিশ্চয়তা</h4>
               <p className="text-xs text-stone-500 mt-0.5">পছন্দ না হলে ফেরত দিন</p>
             </div>
 
@@ -664,7 +626,7 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
         </div>
       </section>
 
-      {/* 4. Comparison Table: FoodGhor vs Regular Market */}
+      {/* 4. Comparison */}
       {cfg.comparison && cfg.comparison.length > 0 && (
         <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-10">
@@ -672,7 +634,7 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
               তুলনামূলক পার্থক্য
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-950 font-serif mt-3">
-              কেন ফুডঘরের পণ্য বাজারের সাধারণ পণ্যের চেয়ে আলাদা?
+              কেন ফুডঘরের পণ্য বাজারের সাধারণ পণ্যের চেয়ে আলাদা?
             </h2>
           </div>
 
@@ -710,13 +672,13 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
         </section>
       )}
 
-      {/* 5. Health Benefits */}
+      {/* 5. Benefits */}
       {cfg.benefits && cfg.benefits.length > 0 && (
         <section className="bg-stone-100 py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <span className="text-xs font-bold text-emerald-800 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                স্বাস্থ্যের সুরক্ষায়
+                স্বাস্থ্যের সুরক্ষায়
               </span>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-950 font-serif mt-3">
                 পণ্যটির অনন্য স্বাস্থ্য ও পুষ্টি উপকারিতা
@@ -725,10 +687,7 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {cfg.benefits.map((b, i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm hover:shadow-md transition-shadow"
-                >
+                <div key={i} className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm hover:shadow-md transition-shadow">
                   <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center mb-4 font-bold">
                     0{i + 1}
                   </div>
@@ -741,7 +700,7 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
         </section>
       )}
 
-      {/* 6. How it is made / Process */}
+      {/* 6. Process */}
       {cfg.howItIsMade && cfg.howItIsMade.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-12">
@@ -749,39 +708,32 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
               আমাদের প্রক্রিয়াজাতকরণ
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-950 font-serif mt-3">
-              কীভাবে প্রস্তুত হয় ফুডঘরের খাঁটি খাদ্যপণ্য?
+              কীভাবে প্রস্তুত হয় ফুডঘরের খাঁটি খাদ্যপণ্য?
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {cfg.howItIsMade.map((step) => (
-              <div
-                key={step.step}
-                className="relative bg-white rounded-3xl p-6 border border-stone-200 shadow-sm flex flex-col items-start"
-              >
+              <div key={step.step} className="relative bg-white rounded-3xl p-6 border border-stone-200 shadow-sm flex flex-col items-start">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-800 text-amber-300 font-black text-xl flex items-center justify-center mb-4 shadow-md">
                   {step.step}
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-stone-900 font-serif mb-2">
-                  {step.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-stone-600 leading-relaxed font-sans">
-                  {step.desc}
-                </p>
+                <h3 className="text-base sm:text-lg font-bold text-stone-900 font-serif mb-2">{step.title}</h3>
+                <p className="text-xs sm:text-sm text-stone-600 leading-relaxed font-sans">{step.desc}</p>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* 7. Dedicated Customer Reviews Component (pulls verified buyer testimonials & photo uploads) */}
+      {/* 7. Reviews */}
       <CustomerReviews
         productId={product.id}
         productName={product.banglaName}
         reviews={cfg.reviews || []}
       />
 
-      {/* 8. FAQs Accordion */}
+      {/* 8. FAQ */}
       {cfg.faqs && cfg.faqs.length > 0 && (
         <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-10">
@@ -795,10 +747,7 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
 
           <div className="space-y-3">
             {cfg.faqs.map((faq, idx) => (
-              <details
-                key={idx}
-                className="group bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-sm open:shadow-md transition-all"
-              >
+              <details key={idx} className="group bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-sm open:shadow-md transition-all">
                 <summary className="flex items-center justify-between p-5 font-bold text-stone-900 text-sm sm:text-base cursor-pointer list-none select-none">
                   <span>{faq.question}</span>
                   <ChevronDown className="w-5 h-5 text-stone-400 group-open:rotate-180 transition-transform" />
@@ -812,7 +761,7 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
         </section>
       )}
 
-      {/* 9. Bottom Repeat Order CTA Section */}
+      {/* 9. Bottom CTA */}
       <section className="bg-gradient-to-br from-emerald-950 via-stone-900 to-emerald-900 text-white py-16 text-center px-4">
         <div className="max-w-3xl mx-auto space-y-5">
           <HeartHandshake className="w-12 h-12 text-amber-400 mx-auto" />
@@ -820,7 +769,7 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
             পরিবারের সুস্বাস্থ্যের জন্য আজই খাঁটি পণ্য সংগ্রহ করুন
           </h2>
           <p className="text-sm sm:text-base text-stone-300">
-            কোনোরূপ ঝুঁকি নেই – পণ্য হাতে পেয়ে চেক করে তারপর মূল্য পরিশোধ করুন।
+            কোনোোরূপ ঝুঁকি নেই – পণ্য হাতে পেয়ে চেক করে তারপর মূল্য পরিশোধ করুন।
           </p>
           <div className="pt-3">
             <button
@@ -828,19 +777,17 @@ export const ProductLandingPage: React.FC<ProductLandingPageProps> = ({ product 
               className="px-8 py-4 bg-amber-400 hover:bg-amber-300 text-stone-950 text-base sm:text-lg font-black rounded-2xl shadow-xl transition-all cursor-pointer inline-flex items-center gap-2"
             >
               <PackageCheck className="w-5 h-5" />
-              <span>উপরে গিয়ে সরাসরি অর্ডার করুন</span>
+              <span>উপরে গিয়ে সরাসরি অর্ডার করুন</span>
             </button>
           </div>
         </div>
       </section>
 
-      {/* 10. Sticky Mobile Bottom Order Bar */}
+      {/* 10. Sticky Mobile Bottom Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200 p-3 shadow-2xl flex items-center justify-between gap-3">
         <div>
           <span className="text-[11px] text-stone-500 block">মোট প্রদেয় মূল্য</span>
-          <span className="text-lg font-black text-emerald-900 font-sans">
-            ৳{grandTotal.toLocaleString()}
-          </span>
+          <span className="text-lg font-black text-emerald-900 font-sans">৳{grandTotal.toLocaleString()}</span>
         </div>
         <button
           onClick={scrollToOrderForm}

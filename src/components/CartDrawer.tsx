@@ -1,20 +1,12 @@
 import React, { useState } from 'react';
 import { X, Trash2, ArrowRight, ShieldCheck, ShoppingBag, Truck } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { resolveImageUrl } from '../lib/imagePath';
 
 export const CartDrawer: React.FC = () => {
   const {
-    cart,
-    isCartOpen,
-    setIsCartOpen,
-    removeFromCart,
-    updateCartQuantity,
-    clearCart,
-    cartTotal,
-    courierConfig,
-    placeOrder,
-    currentUser,
-    registerUser,
+    cart, isCartOpen, setIsCartOpen, removeFromCart, updateCartQuantity,
+    clearCart, cartTotal, courierConfig, placeOrder, currentUser, registerUser,
   } = useStore();
 
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'checkout'>('cart');
@@ -47,37 +39,26 @@ export const CartDrawer: React.FC = () => {
 
   const finalTotal = cartTotal + deliveryFee;
 
-  const handleCheckoutSubmit = (e: React.FormEvent) => {
+  const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!customerName.trim()) {
-      setErrorMsg('আপনার নাম লিখুন');
-      return;
-    }
+    if (!customerName.trim()) { setErrorMsg('আপনার নাম লিখুন'); return; }
     if (!customerPhone.trim() || customerPhone.length < 11) {
-      setErrorMsg('সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন');
-      return;
+      setErrorMsg('সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন'); return;
     }
     if (!customerEmail.trim() || !customerEmail.includes('@')) {
-      setErrorMsg('সঠিক ইমেইল এড্রেস লিখুন (কাস্টমার অ্যাকাউন্টের জন্য)');
-      return;
+      setErrorMsg('সঠিক ইমেইল এড্রেস লিখুন'); return;
     }
-    if (!customerAddress.trim()) {
-      setErrorMsg('সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন');
-      return;
-    }
+    if (!customerAddress.trim()) { setErrorMsg('সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন'); return; }
 
     setIsSubmitting(true);
     try {
       let user = currentUser;
       if (!user) {
-        user = registerUser(
-          customerName.trim(),
-          customerPhone.trim(),
-          customerEmail.trim(),
-          customerAddress.trim(),
-          deliveryArea
+        user = await registerUser(
+          customerName.trim(), customerPhone.trim(), customerEmail.trim(),
+          customerAddress.trim(), deliveryArea
         );
       }
 
@@ -106,7 +87,6 @@ export const CartDrawer: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Backdrop */}
       <div
         onClick={() => setIsCartOpen(false)}
         className="absolute inset-0 bg-stone-950/60 backdrop-blur-sm transition-opacity"
@@ -114,7 +94,6 @@ export const CartDrawer: React.FC = () => {
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
         <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
-          {/* Header */}
           <div className="p-5 border-b border-stone-200 flex items-center justify-between bg-stone-50">
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-emerald-800" />
@@ -123,17 +102,13 @@ export const CartDrawer: React.FC = () => {
               </h2>
             </div>
             <button
-              onClick={() => {
-                setIsCartOpen(false);
-                setCheckoutStep('cart');
-              }}
+              onClick={() => { setIsCartOpen(false); setCheckoutStep('cart'); }}
               className="p-1.5 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-200/50"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Cart Content */}
           {cart.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
               <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 mb-4">
@@ -152,7 +127,6 @@ export const CartDrawer: React.FC = () => {
             </div>
           ) : checkoutStep === 'cart' ? (
             <div className="flex-1 flex flex-col justify-between overflow-hidden">
-              {/* Items List */}
               <div className="flex-1 overflow-y-auto p-5 space-y-4">
                 {cart.map((item, index) => (
                   <div
@@ -160,7 +134,7 @@ export const CartDrawer: React.FC = () => {
                     className="flex gap-3 p-3 rounded-2xl bg-stone-50 border border-stone-200"
                   >
                     <img
-                      src={item.image}
+                      src={resolveImageUrl(item.image)}
                       alt={item.banglaName || item.productName}
                       className="w-16 h-16 object-cover rounded-xl shrink-0 bg-stone-200"
                     />
@@ -177,23 +151,16 @@ export const CartDrawer: React.FC = () => {
                         <span className="font-black text-emerald-900 text-sm">
                           ৳{(item.price * item.quantity).toLocaleString()}
                         </span>
-
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() =>
-                              updateCartQuantity(item.productId, item.packageId, -1)
-                            }
+                            onClick={() => updateCartQuantity(item.productId, item.packageId, -1)}
                             className="w-6 h-6 rounded bg-white border border-stone-300 text-xs font-bold hover:bg-stone-100"
                           >
                             -
                           </button>
-                          <span className="text-xs font-bold text-stone-900 font-sans">
-                            {item.quantity}
-                          </span>
+                          <span className="text-xs font-bold text-stone-900 font-sans">{item.quantity}</span>
                           <button
-                            onClick={() =>
-                              updateCartQuantity(item.productId, item.packageId, 1)
-                            }
+                            onClick={() => updateCartQuantity(item.productId, item.packageId, 1)}
                             className="w-6 h-6 rounded bg-white border border-stone-300 text-xs font-bold hover:bg-stone-100"
                           >
                             +
@@ -211,7 +178,6 @@ export const CartDrawer: React.FC = () => {
                 ))}
               </div>
 
-              {/* Bottom Summary & Proceed */}
               <div className="p-5 border-t border-stone-200 bg-stone-50/50 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-stone-600 font-medium">সাবটোটাল</span>
@@ -219,24 +185,20 @@ export const CartDrawer: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-stone-500">
                   <Truck className="w-4 h-4 text-emerald-700" />
-                  <span>চেকআউটে এরিয়া অনুযায়ী ডেলিভারি চার্জ যোগ হবে</span>
+                  <span>চেকআউটে এরিয়া অনুযায়ী ডেলিভারি চার্জ যোগ হবে</span>
                 </div>
                 <button
                   onClick={() => setCheckoutStep('checkout')}
                   className="w-full py-3.5 px-4 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span>অর্ডার করতে এগিয়ে যান</span>
+                  <span>অর্ডার করতে এগিয়ে যান</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
           ) : (
-            /* Checkout Step Form */
             <div className="flex-1 flex flex-col justify-between overflow-hidden">
-              <form
-                onSubmit={handleCheckoutSubmit}
-                className="flex-1 overflow-y-auto p-5 space-y-4"
-              >
+              <form onSubmit={handleCheckoutSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
                 {errorMsg && (
                   <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold">
                     {errorMsg}
@@ -248,9 +210,7 @@ export const CartDrawer: React.FC = () => {
                     আপনার নাম <span className="text-rose-600">*</span>
                   </label>
                   <input
-                    type="text"
-                    required
-                    value={customerName}
+                    type="text" required value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="আপনার পুরো নাম লিখুন"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700"
@@ -262,9 +222,7 @@ export const CartDrawer: React.FC = () => {
                     ১১ ডিজিটের মোবাইল নম্বর <span className="text-rose-600">*</span>
                   </label>
                   <input
-                    type="tel"
-                    required
-                    value={customerPhone}
+                    type="tel" required value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="017xxxxxxxx"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700"
@@ -276,9 +234,7 @@ export const CartDrawer: React.FC = () => {
                     ইমেইল এড্রেস <span className="text-rose-600">*</span>
                   </label>
                   <input
-                    type="email"
-                    required
-                    value={customerEmail}
+                    type="email" required value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
                     placeholder="name@gmail.com"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700"
@@ -290,9 +246,7 @@ export const CartDrawer: React.FC = () => {
                     সম্পূর্ণ ঠিকানা <span className="text-rose-600">*</span>
                   </label>
                   <textarea
-                    required
-                    rows={2}
-                    value={customerAddress}
+                    required rows={2} value={customerAddress}
                     onChange={(e) => setCustomerAddress(e.target.value)}
                     placeholder="বাসা নং, রোড নং, এলাকা, থানা ও জেলা"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700"
@@ -300,9 +254,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">
-                    ডেলিভারি এরিয়া
-                  </label>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">ডেলিভারি এরিয়া</label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -329,7 +281,6 @@ export const CartDrawer: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Final Bill */}
                 <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs space-y-1">
                   <div className="flex justify-between">
                     <span>পণ্যের মোট:</span>
@@ -354,8 +305,7 @@ export const CartDrawer: React.FC = () => {
                     ব্যাগে ফিরুন
                   </button>
                   <button
-                    type="submit"
-                    disabled={isSubmitting}
+                    type="submit" disabled={isSubmitting}
                     className="flex-1 py-3 bg-emerald-800 hover:bg-emerald-900 text-white text-sm font-black rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <ShieldCheck className="w-4 h-4 text-amber-300" />

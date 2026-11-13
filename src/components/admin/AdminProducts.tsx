@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Plus,
   Edit2,
@@ -15,98 +15,100 @@ import {
   MessageSquare,
   FileText,
   Image as ImageIcon,
-} from 'lucide-react';
-import { useStore } from '../../context/StoreContext';
-import { Product, ProductLandingConfig, ProductPackage, ReviewItem } from '../../types';
-import { ImageUploadDropzone } from '../common/ImageUploadDropzone';
+} from "lucide-react";
+import { useStore } from "../../context/StoreContext";
+import {
+  Product,
+  ProductLandingConfig,
+  ProductPackage,
+  ReviewItem,
+} from "../../types";
+import { ImageUploadDropzone } from "../common/ImageUploadDropzone";
+import { resolveImageUrl } from "../../lib/imagePath";
 
 export const AdminProducts: React.FC = () => {
   const { products, addProduct, updateProduct, deleteProduct, navigate } = useStore();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    'basic' | 'funnel' | 'packages' | 'comparison' | 'benefits' | 'faqs'
-  >('basic');
+    "basic" | "funnel" | "packages" | "comparison" | "benefits" | "faqs"
+  >("basic");
 
-  // 📸 প্রতি প্রোডাক্টে সর্বোচ্চ ৫টি ছবি (১টি Main + ৪টি Gallery)
   const MAX_IMAGES_PER_PRODUCT = 5;
-  const MAX_GALLERY_IMAGES = MAX_IMAGES_PER_PRODUCT - 1; // = 4
+  const MAX_GALLERY_IMAGES = MAX_IMAGES_PER_PRODUCT - 1;
 
   const presetImages = [
-    { label: 'সুন্দরবনের খাঁটি মধু', url: '/src/assets/images/product_sundarban_raw_honey_1794499288912.jpg' },
-    { label: 'পাবনার গাওয়া ঘি', url: '/src/assets/images/product_pure_cow_ghee_1794499290154.jpg' },
-    { label: 'ঘানি ভাঙা সরিষার তেল', url: '/src/assets/images/product_cold_pressed_mustard_oil_1794499290697.jpg' },
-    { label: 'রয়্যাল ড্রাই ফ্রুটস কম্বো', url: '/src/assets/images/product_premium_dryfruits_combo_1794499290032.jpg' },
-    { label: 'ফুডঘর প্রিমিয়াম হার্ভেস্ট', url: '/src/assets/images/hero_foodghor_gourmet_honey_ghee_1794499288257.jpg' },
+    { label: "সুন্দরবনের খাঁটি মধু", url: "/images/product_sundarban_raw_honey_1794499288912.jpg" },
+    { label: "পাবনার গাওয়া ঘি", url: "/images/product_pure_cow_ghee_1794499290154.jpg" },
+    { label: "ঘানি ভাঙা সরিষার তেল", url: "/images/product_cold_pressed_mustard_oil_1794499290697.jpg" },
+    { label: "রয়্যাল ড্রাই ফ্রুটস কম্বো", url: "/images/product_premium_dryfruits_combo_1794499290032.jpg" },
+    { label: "ফুডঘর প্রিমিয়াম হার্ভেস্ট", url: "/images/hero_foodghor_gourmet_honey_ghee_1794499288257.jpg" },
   ];
 
   const handleCreateNew = () => {
     const newProd: Product = {
       id: `p-${Date.now()}`,
       slug: `product-${Date.now()}`,
-      name: 'New Gourmet Product',
-      banglaName: 'নতুন অর্গানিক খাদ্যপণ্য',
-      category: 'খাঁটি মধু',
+      name: "New Gourmet Product",
+      banglaName: "নতুন অর্গানিক খাদ্যপণ্য",
+      category: "খাঁটি মধু",
       price: 900,
       regularPrice: 1200,
-      unit: '১ কেজি',
+      unit: "১ কেজি",
       inStock: true,
       stockCount: 50,
       image: presetImages[0].url,
       galleryImages: [presetImages[0].url, presetImages[4].url],
-      shortDescription: '১০০% খাঁটি ও প্রাকৃতিক বিশুদ্ধ খাবার।',
+      shortDescription: "১০০% খাঁটি ও প্রাকৃতিক বিশুদ্ধ খাবার।",
       landingConfig: {
-        headline: 'শতভাগ খাঁটি ও প্রাকৃতিক খাদ্যপণ্য – সরাসরি নিজস্ব সংগ্রহ!',
-        subHeadline:
-          'কোনো কেমিক্যাল, প্রিজারভেটিভ বা ক্ষতিকর উপাদান ছাড়া প্রাকৃতিক খাবার। ঘরে বসেই আসল স্বাদ নিন।',
-        heroBadge: '১০০% খাঁটি ও ল্যাব টেস্টেড',
+        headline: "শতভাগ খাঁটি ও প্রাকৃতিক খাদ্যপণ্য – সরাসরি নিজস্ব সংগ্রহ!",
+        subHeadline: "কোনো কেমিক্যাল, প্রিজারভেটিভ বা ক্ষতিকর উপাদান ছাড়া প্রাকৃতিক খাবার। ঘরে বসেই আসল স্বাদ নিন।",
+        heroBadge: "১০০% খাঁটি ও ল্যাব টেস্টেড",
         countdownMinutes: 45,
         highlights: [
-          '১০০% প্রাকৃতিক ও সরাসরি নিজস্ব তত্ত্বাবধানে সংগৃহীত',
-          'কোনো ভেজাল বা কৃত্রিম ফ্লেভার নেই',
-          'পণ্য হাতে পেয়ে চেক করে টাকা দেওয়ার নিশ্চয়তা',
+          "১০০% প্রাকৃতিক ও সরাসরি নিজস্ব তত্ত্বাবধানে সংগৃহীত",
+          "কোনো ভেজাল বা কৃত্রিম ফ্লেভার নেই",
+          "পণ্য হাতে পেয়ে চেক করে টাকা দেওয়ার নিশ্চয়তা",
         ],
         packages: [
-          { id: 'p1', name: 'রেগুলার প্যাক', weight: '৫০০ গ্রাম', price: 900, regularPrice: 1200 },
-          { id: 'p2', name: 'সেভার কম্বো প্যাক', weight: '১ কেজি', price: 1750, regularPrice: 2400, popular: true },
+          { id: "p1", name: "রেগুলার প্যাক", weight: "৫০০ গ্রাম", price: 900, regularPrice: 1200 },
+          { id: "p2", name: "সেভার কম্বো প্যাক", weight: "১ কেজি", price: 1750, regularPrice: 2400, popular: true },
         ],
         comparison: [
-          { feature: 'কোয়ালিটি ও বিশুদ্ধতা', ourProduct: '১০০% খাঁটি ও ল্যাব টেস্টেড', regularMarket: 'ভেজাল ও ক্ষতিকর রাসায়নিক যুক্ত' },
-          { feature: 'ডেলিভারি সুবিধা', ourProduct: 'পণ্য দেখে টাকা দেওয়ার সুবিধা', regularMarket: 'প্যাকেট খুললে রিটার্ন নেই' },
+          { feature: "কোয়ালিটি ও বিশুদ্ধতা", ourProduct: "১০০% খাঁটি ও ল্যাব টেস্টেড", regularMarket: "ভেজাল ও ক্ষতিকর রাসায়নিক যুক্ত" },
+          { feature: "ডেলিভারি সুবিধা", ourProduct: "পণ্য দেখে টাকা দেওয়ার সুবিধা", regularMarket: "প্যাকেট খুললে রিটার্ন নেই" },
         ],
         benefits: [
-          { title: 'রোগ প্রতিরোধ ক্ষমতা বৃদ্ধি', desc: 'প্রাকৃতিক পুষ্টি উপাদান শরীরের শক্তি ও কার্যক্ষমতা বাড়িয়ে তোলে।' },
-          { title: 'হজমে সাহায্য করে', desc: 'দৈনন্দিন হজম ক্ষমতা উন্নত করে ও শরীর সতেজ রাখে।' },
+          { title: "রোগ প্রতিরোধ ক্ষমতা বৃদ্ধি", desc: "প্রাকৃতিক পুষ্টি উপাদান শরীরের শক্তি ও কার্যক্ষমতা বাড়িয়ে তোলে।" },
+          { title: "হজমে সাহায্য করে", desc: "দৈনন্দিন হজম ক্ষমতা উন্নত করে ও শরীর সতেজ রাখে।" },
         ],
         howItIsMade: [
-          { step: 1, title: 'প্রাকৃতিক উৎস চিহ্নিতকরণ', desc: 'সেরা উৎস থেকে সরাসরি কাঁচামাল সংগ্রহ।' },
-          { step: 2, title: 'হাইজিনিক প্রসেসিং', desc: 'উন্নত প্রযুক্তিতে ধুলোবালিমুক্ত প্যাকেজিং।' },
+          { step: 1, title: "প্রাকৃতিক উৎস চিহ্নিতকরণ", desc: "সেরা উৎস থেকে সরাসরি কাঁচামাল সংগ্রহ।" },
+          { step: 2, title: "হাইজিনিক প্রসেসিং", desc: "উন্নত প্রযুক্তিতে ধুলোবালিমুক্ত প্যাকেজিং।" },
         ],
-        guarantees: ['১০০% ক্যাশ অন ডেলিভারি', 'পছন্দ না হলে মানিব্যাক গ্যারান্টি'],
+        guarantees: ["১০০% ক্যাশ অন ডেলিভারি", "পছন্দ না হলে মানিব্যাক গ্যারান্টি"],
         faqs: [
-          { question: 'পণ্যটি হাতে পেতে কত সময় লাগবে?', answer: 'ঢাকার মধ্যে ২৪-৪৮ ঘণ্টা এবং ঢাকার বাইরে ৪৮-৭২ ঘণ্টার মধ্যে ডেলিভারি সম্পন্ন হয়।' },
+          { question: "পণ্যটি হাতে পেতে কত সময় লাগবে?", answer: "ঢাকার মধ্যে ২৪-৪৮ ঘণ্টা এবং ঢাকার বাইরে ৪৮-৭২ ঘণ্টার মধ্যে ডেলিভারি সম্পন্ন হয়।" },
         ],
         reviews: [
-          { id: 'r1', name: 'মোঃ রফিকুল ইসলাম', location: 'ঢাকা', rating: 5, date: '১ দিন আগে', comment: 'খুবই চমৎকার স্বাদ ও কোয়ালিটি। ধন্যবাদ ফুডঘর!', verified: true, status: 'Approved' },
+          { id: "r1", name: "মোঃ রফিকুল ইসলাম", location: "ঢাকা", rating: 5, date: "১ দিন আগে", comment: "খুবই চমৎকার স্বাদ ও কোয়ালিটি। ধন্যবাদ ফুডঘর!", verified: true, status: "Approved" },
         ],
       },
     };
 
     setEditingProduct(newProd);
     setIsModalOpen(true);
-    setActiveTab('basic');
+    setActiveTab("basic");
   };
 
   const handleEdit = (prod: Product) => {
     setEditingProduct(JSON.parse(JSON.stringify(prod)));
     setIsModalOpen(true);
-    setActiveTab('basic');
+    setActiveTab("basic");
   };
 
   const handleSave = () => {
     if (!editingProduct) return;
-
-    // 📸 সর্বোচ্চ ৫টি ছবি লিমিট চেক
     const totalImages = 1 + (editingProduct.galleryImages?.length || 0);
     if (totalImages > MAX_IMAGES_PER_PRODUCT) {
       alert(
@@ -167,7 +169,7 @@ export const AdminProducts: React.FC = () => {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <img
-                        src={p.image}
+                        src={resolveImageUrl(p.image)}
                         alt={p.banglaName}
                         className="w-12 h-12 object-cover rounded-xl bg-stone-100 border border-stone-200"
                       />
@@ -191,11 +193,11 @@ export const AdminProducts: React.FC = () => {
                       onClick={() => updateProduct({ ...p, inStock: !p.inStock })}
                       className={`px-2.5 py-1 rounded-full text-[11px] font-bold cursor-pointer ${
                         p.inStock
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-rose-100 text-rose-800'
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-rose-100 text-rose-800"
                       }`}
                     >
-                      {p.inStock ? 'ইন-স্টক (Active)' : 'স্টক আউট'}
+                      {p.inStock ? "ইন-স্টক (Active)" : "স্টক আউট"}
                     </button>
                   </td>
                   <td className="py-3 px-4 text-center">
@@ -236,11 +238,11 @@ export const AdminProducts: React.FC = () => {
         </div>
       </div>
 
-      {/* ============ PRODUCT EDITOR MODAL ============ */}
+      {/* Product Editor Modal */}
       {isModalOpen && editingProduct && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
           <div className="bg-white rounded-2xl sm:rounded-3xl max-w-5xl w-full max-h-[96vh] flex flex-col shadow-2xl border border-stone-200 overflow-hidden">
-            {/* ---- Modal Header (fixed) ---- */}
+            {/* Header */}
             <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-stone-200 flex items-center justify-between bg-stone-50 shrink-0">
               <div>
                 <h3 className="font-black text-stone-900 text-base sm:text-lg font-serif">
@@ -267,23 +269,23 @@ export const AdminProducts: React.FC = () => {
               </div>
             </div>
 
-            {/* ---- Tab Nav (fixed, scrollable on mobile) ---- */}
+            {/* Tabs */}
             <div className="flex border-b border-stone-200 px-3 sm:px-5 gap-1 sm:gap-2 overflow-x-auto bg-white py-2 text-[11px] sm:text-xs font-semibold shrink-0">
               {[
-                { key: 'basic', label: '১. বেসিক তথ্য ও ফটো' },
-                { key: 'funnel', label: '২. হেডলাইন ও কপি' },
-                { key: 'packages', label: '৩. প্যাকেজ ও অফার' },
-                { key: 'comparison', label: '৪. বাজার তুলনা' },
-                { key: 'benefits', label: '৫. উপকারিতা' },
-                { key: 'faqs', label: '৬. FAQ' },
+                { key: "basic", label: "১. বেসিক তথ্য ও ফটো" },
+                { key: "funnel", label: "২. হেডলাইন ও কপি" },
+                { key: "packages", label: "৩. প্যাকেজ ও অফার" },
+                { key: "comparison", label: "৪. বাজার তুলনা" },
+                { key: "benefits", label: "৫. উপকারিতা" },
+                { key: "faqs", label: "৬. FAQ" },
               ].map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as typeof activeTab)}
                   className={`px-2.5 sm:px-3 py-2 rounded-lg whitespace-nowrap cursor-pointer transition-colors ${
                     activeTab === tab.key
-                      ? 'bg-emerald-800 text-white'
-                      : 'text-stone-600 hover:bg-stone-100'
+                      ? "bg-emerald-800 text-white"
+                      : "text-stone-600 hover:bg-stone-100"
                   }`}
                 >
                   {tab.label}
@@ -291,14 +293,11 @@ export const AdminProducts: React.FC = () => {
               ))}
             </div>
 
-            {/* ---- Scrollable Body ---- */}
+            {/* Scrollable Body */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-5">
-              {/* ============================================================ */}
-              {/* TAB 1: BASIC INFO                                           */}
-              {/* ============================================================ */}
-              {activeTab === 'basic' && (
+              {/* TAB 1: BASIC */}
+              {activeTab === "basic" && (
                 <div className="space-y-3 text-xs">
-                  {/* Row 1: বাংলা নাম | ইংরেজি নাম */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block font-bold text-stone-700 mb-1">
@@ -307,9 +306,7 @@ export const AdminProducts: React.FC = () => {
                       <input
                         type="text"
                         value={editingProduct.banglaName}
-                        onChange={(e) =>
-                          setEditingProduct({ ...editingProduct, banglaName: e.target.value })
-                        }
+                        onChange={(e) => setEditingProduct({ ...editingProduct, banglaName: e.target.value })}
                         className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700"
                       />
                     </div>
@@ -318,24 +315,19 @@ export const AdminProducts: React.FC = () => {
                       <input
                         type="text"
                         value={editingProduct.name}
-                        onChange={(e) =>
-                          setEditingProduct({ ...editingProduct, name: e.target.value })
-                        }
+                        onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
                         className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700"
                       />
                     </div>
                   </div>
 
-                  {/* Row 2: ক্যাটাগরি | পরিমাণ | Stock Count | স্টক স্ট্যাটাস */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div>
                       <label className="block font-bold text-stone-700 mb-1">ক্যাটাগরি</label>
                       <input
                         type="text"
                         value={editingProduct.category}
-                        onChange={(e) =>
-                          setEditingProduct({ ...editingProduct, category: e.target.value })
-                        }
+                        onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
                         placeholder="খাঁটি মধু"
                         className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-700/20"
                       />
@@ -345,9 +337,7 @@ export const AdminProducts: React.FC = () => {
                       <input
                         type="text"
                         value={editingProduct.unit}
-                        onChange={(e) =>
-                          setEditingProduct({ ...editingProduct, unit: e.target.value })
-                        }
+                        onChange={(e) => setEditingProduct({ ...editingProduct, unit: e.target.value })}
                         placeholder="৫০০ গ্রাম"
                         className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-700/20"
                       />
@@ -357,12 +347,7 @@ export const AdminProducts: React.FC = () => {
                       <input
                         type="number"
                         value={editingProduct.stockCount}
-                        onChange={(e) =>
-                          setEditingProduct({
-                            ...editingProduct,
-                            stockCount: Number(e.target.value),
-                          })
-                        }
+                        onChange={(e) => setEditingProduct({ ...editingProduct, stockCount: Number(e.target.value) })}
                         className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-700/20"
                       />
                     </div>
@@ -370,24 +355,18 @@ export const AdminProducts: React.FC = () => {
                       <label className="block font-bold text-stone-700 mb-1">স্টক স্ট্যাটাস</label>
                       <button
                         type="button"
-                        onClick={() =>
-                          setEditingProduct({
-                            ...editingProduct,
-                            inStock: !editingProduct.inStock,
-                          })
-                        }
+                        onClick={() => setEditingProduct({ ...editingProduct, inStock: !editingProduct.inStock })}
                         className={`w-full py-2 px-3 rounded-lg border-2 text-xs font-bold cursor-pointer transition-colors ${
                           editingProduct.inStock
-                            ? 'border-emerald-700 bg-emerald-50 text-emerald-900'
-                            : 'border-rose-300 bg-rose-50 text-rose-800'
+                            ? "border-emerald-700 bg-emerald-50 text-emerald-900"
+                            : "border-rose-300 bg-rose-50 text-rose-800"
                         }`}
                       >
-                        {editingProduct.inStock ? '✓ ইন-স্টক' : '✕ স্টক আউট'}
+                        {editingProduct.inStock ? "✓ ইন-স্টক" : "✕ স্টক আউট"}
                       </button>
                     </div>
                   </div>
 
-                  {/* Row 3: মূল্য | রেগুলার মূল্য | Slug */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="block font-bold text-stone-700 mb-1">
@@ -396,9 +375,7 @@ export const AdminProducts: React.FC = () => {
                       <input
                         type="number"
                         value={editingProduct.price}
-                        onChange={(e) =>
-                          setEditingProduct({ ...editingProduct, price: Number(e.target.value) })
-                        }
+                        onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
                         className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm font-bold text-emerald-900 focus:ring-2 focus:ring-emerald-700/20"
                       />
                     </div>
@@ -407,12 +384,7 @@ export const AdminProducts: React.FC = () => {
                       <input
                         type="number"
                         value={editingProduct.regularPrice}
-                        onChange={(e) =>
-                          setEditingProduct({
-                            ...editingProduct,
-                            regularPrice: Number(e.target.value),
-                          })
-                        }
+                        onChange={(e) => setEditingProduct({ ...editingProduct, regularPrice: Number(e.target.value) })}
                         className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:ring-2 focus:ring-emerald-700/20"
                       />
                     </div>
@@ -421,15 +393,12 @@ export const AdminProducts: React.FC = () => {
                       <input
                         type="text"
                         value={editingProduct.slug}
-                        onChange={(e) =>
-                          setEditingProduct({ ...editingProduct, slug: e.target.value })
-                        }
+                        onChange={(e) => setEditingProduct({ ...editingProduct, slug: e.target.value })}
                         className="w-full px-3 py-2 rounded-lg border border-stone-300 text-xs font-mono focus:ring-2 focus:ring-emerald-700/20"
                       />
                     </div>
                   </div>
 
-                  {/* Divider */}
                   <div className="pt-2 border-t border-stone-200">
                     <h4 className="font-bold text-stone-900 text-sm mb-3 flex items-center gap-1.5">
                       <ImageIcon className="w-4 h-4 text-emerald-700" />
@@ -437,24 +406,18 @@ export const AdminProducts: React.FC = () => {
                     </h4>
                   </div>
 
-                  {/* Row 4: Main Image | Gallery — SIDE BY SIDE */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Left: Main Image */}
                     <div>
                       <ImageUploadDropzone
                         value={editingProduct.image}
-                        onChange={(dataUrl) =>
-                          setEditingProduct({ ...editingProduct, image: dataUrl })
-                        }
+                        onChange={(dataUrl) => setEditingProduct({ ...editingProduct, image: dataUrl })}
                         label={`মূল ছবি (1 / ${MAX_IMAGES_PER_PRODUCT})`}
                         helperText="16:9 অনুপাতে ছবি দিন"
                         aspectRatio="16:9"
                       />
                     </div>
 
-                    {/* Right: Gallery (max 4 + 1 main = 5 total) */}
                     <div className="space-y-2">
-                      {/* Counter + Add button */}
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <label className="block font-bold text-stone-800 text-xs">
@@ -462,8 +425,8 @@ export const AdminProducts: React.FC = () => {
                             <span
                               className={
                                 (editingProduct.galleryImages?.length || 0) >= MAX_GALLERY_IMAGES
-                                  ? 'text-rose-600'
-                                  : 'text-emerald-800'
+                                  ? "text-rose-600"
+                                  : "text-emerald-800"
                               }
                             >
                               {editingProduct.galleryImages?.length || 0}
@@ -477,42 +440,31 @@ export const AdminProducts: React.FC = () => {
 
                         <button
                           type="button"
-                          disabled={
-                            (editingProduct.galleryImages?.length || 0) >= MAX_GALLERY_IMAGES
-                          }
+                          disabled={(editingProduct.galleryImages?.length || 0) >= MAX_GALLERY_IMAGES}
                           onClick={() => {
                             const cur = editingProduct.galleryImages || [];
                             if (cur.length >= MAX_GALLERY_IMAGES) return;
-                            setEditingProduct({
-                              ...editingProduct,
-                              galleryImages: [...cur, ''],
-                            });
+                            setEditingProduct({ ...editingProduct, galleryImages: [...cur, ""] });
                           }}
                           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors shrink-0 ${
                             (editingProduct.galleryImages?.length || 0) >= MAX_GALLERY_IMAGES
-                              ? 'bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed'
-                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-200 cursor-pointer'
+                              ? "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                              : "bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-200 cursor-pointer"
                           }`}
                         >
                           {(editingProduct.galleryImages?.length || 0) >= MAX_GALLERY_IMAGES
-                            ? '✓ সর্বোচ্চ লিমিট'
-                            : `+ যোগ করুন (${
-                                MAX_GALLERY_IMAGES -
-                                (editingProduct.galleryImages?.length || 0)
-                              })`}
+                            ? "✓ সর্বোচ্চ লিমিট"
+                            : `+ যোগ করুন (${MAX_GALLERY_IMAGES - (editingProduct.galleryImages?.length || 0)})`}
                         </button>
                       </div>
 
-                      {/* Gallery grid */}
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-52 overflow-y-auto pr-1">
                         {(editingProduct.galleryImages || []).map((gImg, gIdx) => (
                           <div key={gIdx} className="relative">
                             <button
                               type="button"
                               onClick={() => {
-                                const cur = editingProduct.galleryImages.filter(
-                                  (_, idx) => idx !== gIdx
-                                );
+                                const cur = editingProduct.galleryImages.filter((_, idx) => idx !== gIdx);
                                 setEditingProduct({ ...editingProduct, galleryImages: cur });
                               }}
                               className="absolute -top-1 -right-1 z-20 p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow"
@@ -540,13 +492,11 @@ export const AdminProducts: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Warning when full */}
                       {(editingProduct.galleryImages?.length || 0) >= MAX_GALLERY_IMAGES && (
                         <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg text-[10px] text-amber-800 font-medium flex items-start gap-1.5">
                           <span className="text-amber-600">⚠️</span>
                           <span>
-                            সর্বোচ্চ {MAX_GALLERY_IMAGES}টি গ্যালারি ছবি যোগ করা যাবে। আরও যোগ করতে হলে
-                            আগের কোনো ছবি <strong>X</strong> বাটন দিয়ে মুছে ফেলুন।
+                            সর্বোচ্চ {MAX_GALLERY_IMAGES}টি গ্যালারি ছবি যোগ করা যাবে। আরও যোগ করতে হলে আগের কোনো ছবি <strong>X</strong> বাটন দিয়ে মুছে ফেলুন।
                           </span>
                         </div>
                       )}
@@ -555,25 +505,18 @@ export const AdminProducts: React.FC = () => {
                 </div>
               )}
 
-              {/* ============================================================ */}
-              {/* TAB 2: SALES FUNNEL HEADLINE & COPY                          */}
-              {/* ============================================================ */}
-              {activeTab === 'funnel' && (
+              {/* TAB 2: FUNNEL */}
+              {activeTab === "funnel" && (
                 <div className="space-y-4 text-xs">
                   <div>
-                    <label className="block font-bold text-stone-700 mb-1">
-                      ল্যান্ডিং পেজ মূল আকর্ষক হেডলাইন
-                    </label>
+                    <label className="block font-bold text-stone-700 mb-1">ল্যান্ডিং পেজ মূল আকর্ষক হেডলাইন</label>
                     <textarea
                       rows={2}
                       value={editingProduct.landingConfig.headline}
                       onChange={(e) =>
                         setEditingProduct({
                           ...editingProduct,
-                          landingConfig: {
-                            ...editingProduct.landingConfig,
-                            headline: e.target.value,
-                          },
+                          landingConfig: { ...editingProduct.landingConfig, headline: e.target.value },
                         })
                       }
                       className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm font-semibold"
@@ -588,10 +531,7 @@ export const AdminProducts: React.FC = () => {
                       onChange={(e) =>
                         setEditingProduct({
                           ...editingProduct,
-                          landingConfig: {
-                            ...editingProduct.landingConfig,
-                            subHeadline: e.target.value,
-                          },
+                          landingConfig: { ...editingProduct.landingConfig, subHeadline: e.target.value },
                         })
                       }
                       className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm"
@@ -607,10 +547,7 @@ export const AdminProducts: React.FC = () => {
                         onChange={(e) =>
                           setEditingProduct({
                             ...editingProduct,
-                            landingConfig: {
-                              ...editingProduct.landingConfig,
-                              heroBadge: e.target.value,
-                            },
+                            landingConfig: { ...editingProduct.landingConfig, heroBadge: e.target.value },
                           })
                         }
                         className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm"
@@ -636,9 +573,7 @@ export const AdminProducts: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block font-bold text-stone-700 mb-1">
-                      মূল হাইলাইটস বুলেট পয়েন্ট:
-                    </label>
+                    <label className="block font-bold text-stone-700 mb-1">মূল হাইলাইটস বুলেট পয়েন্ট:</label>
                     <div className="space-y-2">
                       {editingProduct.landingConfig.highlights.map((h, i) => (
                         <div key={i} className="flex gap-2">
@@ -658,9 +593,7 @@ export const AdminProducts: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              const copy = editingProduct.landingConfig.highlights.filter(
-                                (_, idx) => idx !== i
-                              );
+                              const copy = editingProduct.landingConfig.highlights.filter((_, idx) => idx !== i);
                               setEditingProduct({
                                 ...editingProduct,
                                 landingConfig: { ...editingProduct.landingConfig, highlights: copy },
@@ -679,10 +612,7 @@ export const AdminProducts: React.FC = () => {
                             ...editingProduct,
                             landingConfig: {
                               ...editingProduct.landingConfig,
-                              highlights: [
-                                ...editingProduct.landingConfig.highlights,
-                                'নতুন বৈশিষ্ট্য লিখুন',
-                              ],
+                              highlights: [...editingProduct.landingConfig.highlights, "নতুন বৈশিষ্ট্য লিখুন"],
                             },
                           });
                         }}
@@ -695,22 +625,18 @@ export const AdminProducts: React.FC = () => {
                 </div>
               )}
 
-              {/* ============================================================ */}
-              {/* TAB 3: PACKAGES                                            */}
-              {/* ============================================================ */}
-              {activeTab === 'packages' && (
+              {/* TAB 3: PACKAGES */}
+              {activeTab === "packages" && (
                 <div className="space-y-4 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-stone-800 text-sm">
-                      প্যাকেজ ও কম্বো সেভার অফার:
-                    </span>
+                    <span className="font-bold text-stone-800 text-sm">প্যাকেজ ও কম্বো সেভার অফার:</span>
                     <button
                       type="button"
                       onClick={() => {
                         const newPkg: ProductPackage = {
                           id: `pkg-${Date.now()}`,
-                          name: 'নতুন কম্বো প্যাক',
-                          weight: '১ কেজি',
+                          name: "নতুন কম্বো প্যাক",
+                          weight: "১ কেজি",
                           price: 1500,
                           regularPrice: 2000,
                         };
@@ -730,10 +656,7 @@ export const AdminProducts: React.FC = () => {
 
                   <div className="space-y-3">
                     {editingProduct.landingConfig.packages.map((pkg, i) => (
-                      <div
-                        key={pkg.id}
-                        className="p-4 rounded-xl border border-stone-200 bg-stone-50 space-y-2"
-                      >
+                      <div key={pkg.id} className="p-4 rounded-xl border border-stone-200 bg-stone-50 space-y-2">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           <input
                             type="text"
@@ -812,9 +735,7 @@ export const AdminProducts: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              const copy = editingProduct.landingConfig.packages.filter(
-                                (_, idx) => idx !== i
-                              );
+                              const copy = editingProduct.landingConfig.packages.filter((_, idx) => idx !== i);
                               setEditingProduct({
                                 ...editingProduct,
                                 landingConfig: { ...editingProduct.landingConfig, packages: copy },
@@ -831,10 +752,8 @@ export const AdminProducts: React.FC = () => {
                 </div>
               )}
 
-              {/* ============================================================ */}
-              {/* TAB 4: COMPARISON                                          */}
-              {/* ============================================================ */}
-              {activeTab === 'comparison' && (
+              {/* TAB 4: COMPARISON */}
+              {activeTab === "comparison" && (
                 <div className="space-y-4 text-xs">
                   <span className="font-bold text-stone-800 text-sm block">
                     ফুডঘর বনাম বাজারের সাধারণ পণ্যের তুলনা:
@@ -890,14 +809,10 @@ export const AdminProducts: React.FC = () => {
                 </div>
               )}
 
-              {/* ============================================================ */}
-              {/* TAB 5: BENEFITS                                            */}
-              {/* ============================================================ */}
-              {activeTab === 'benefits' && (
+              {/* TAB 5: BENEFITS */}
+              {activeTab === "benefits" && (
                 <div className="space-y-4 text-xs">
-                  <span className="font-bold text-stone-800 text-sm block">
-                    স্বাস্থ্য ও পুষ্টি উপকারিতা:
-                  </span>
+                  <span className="font-bold text-stone-800 text-sm block">স্বাস্থ্য ও পুষ্টি উপকারিতা:</span>
                   {editingProduct.landingConfig.benefits.map((b, i) => (
                     <div key={i} className="p-3 rounded-xl border border-stone-200 bg-stone-50 space-y-2">
                       <input
@@ -933,10 +848,8 @@ export const AdminProducts: React.FC = () => {
                 </div>
               )}
 
-              {/* ============================================================ */}
-              {/* TAB 6: FAQS                                                */}
-              {/* ============================================================ */}
-              {activeTab === 'faqs' && (
+              {/* TAB 6: FAQS */}
+              {activeTab === "faqs" && (
                 <div className="space-y-4 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-stone-800 text-sm">সাধারণ প্রশ্ন-উত্তর:</span>
@@ -949,7 +862,7 @@ export const AdminProducts: React.FC = () => {
                             ...editingProduct.landingConfig,
                             faqs: [
                               ...editingProduct.landingConfig.faqs,
-                              { question: 'নতুন প্রশ্ন?', answer: 'সঠিক উত্তর লিখুন।' },
+                              { question: "নতুন প্রশ্ন?", answer: "সঠিক উত্তর লিখুন।" },
                             ],
                           },
                         });
@@ -996,7 +909,7 @@ export const AdminProducts: React.FC = () => {
               )}
             </div>
 
-            {/* ---- Modal Footer (fixed) ---- */}
+            {/* Footer */}
             <div className="px-4 sm:px-5 py-3 border-t border-stone-200 bg-stone-50 flex items-center justify-between gap-2 shrink-0">
               <span className="text-[11px] text-stone-500 hidden sm:inline">
                 ✓ সব পরিবর্তন সেভ করতে "সংরক্ষণ" চাপুন

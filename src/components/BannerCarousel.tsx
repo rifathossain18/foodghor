@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, ArrowRight, Sparkles } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { resolveImageUrl } from '../lib/imagePath';
 
 export const BannerCarousel: React.FC = () => {
   const { banners, navigate } = useStore();
@@ -37,11 +38,8 @@ export const BannerCarousel: React.FC = () => {
     if (touchStartX.current === null) return;
     const touchEndX = e.changedTouches[0].clientX;
     const deltaX = touchStartX.current - touchEndX;
-    if (deltaX > 50) {
-      handleNext();
-    } else if (deltaX < -50) {
-      handlePrev();
-    }
+    if (deltaX > 50) handleNext();
+    else if (deltaX < -50) handlePrev();
     touchStartX.current = null;
   };
 
@@ -53,31 +51,22 @@ export const BannerCarousel: React.FC = () => {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Lateral Sliding Strip Container */}
       <div
         className="flex transition-transform duration-700 ease-out h-[360px] sm:h-[460px] md:h-[540px] lg:h-[580px]"
-        style={{
-          transform: `translateX(-${currentIndex * 100}%)`,
-        }}
+        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {activeBanners.map((banner, index) => (
-          <div
-            key={banner.id}
-            className="w-full flex-shrink-0 relative h-full flex items-center"
-          >
-            {/* Background Image with Measured Scrim */}
+          <div key={banner.id} className="w-full flex-shrink-0 relative h-full flex items-center">
             <img
-              src={banner.imageUrl}
+              src={resolveImageUrl(banner.imageUrl)}
               alt={banner.title}
               className="absolute inset-0 w-full h-full object-cover object-center"
               loading={index === 0 ? 'eager' : 'lazy'}
               referrerPolicy="no-referrer"
             />
-            {/* Dark Gradient Overlay for 100% WCAG AA Text Contrast */}
             <div className="absolute inset-0 bg-gradient-to-r from-stone-950/90 via-stone-950/65 to-transparent sm:to-stone-950/20" />
             <div className="absolute inset-0 bg-radial-[at_top_left] from-emerald-950/40 via-transparent to-black/30 pointer-events-none" />
 
-            {/* Banner Content Container */}
             <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 w-full">
               <div className="max-w-2xl space-y-4 sm:space-y-5">
                 {banner.tag && (
@@ -126,7 +115,6 @@ export const BannerCarousel: React.FC = () => {
         ))}
       </div>
 
-      {/* Prev / Next Controls */}
       {total > 1 && (
         <>
           <button
@@ -146,7 +134,6 @@ export const BannerCarousel: React.FC = () => {
         </>
       )}
 
-      {/* Dot Indicators */}
       {total > 1 && (
         <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
           {activeBanners.map((_, i) => (
@@ -155,9 +142,7 @@ export const BannerCarousel: React.FC = () => {
               onClick={() => setCurrentIndex(i)}
               aria-label={`Go to slide ${i + 1}`}
               className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                i === currentIndex
-                  ? 'w-8 bg-amber-400'
-                  : 'w-2.5 bg-white/50 hover:bg-white/80'
+                i === currentIndex ? 'w-8 bg-amber-400' : 'w-2.5 bg-white/50 hover:bg-white/80'
               }`}
             />
           ))}

@@ -1,12 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
-  initialBanners,
-  initialCourierConfig,
-  initialOrders,
-  initialPixelConfig,
-  initialProducts,
-  initialSettings,
-  initialUsers,
+  initialBanners, initialCourierConfig, initialOrders, initialPixelConfig,
+  initialProducts, initialSettings, initialUsers,
 } from '../data/initialData';
 import {
   Banner, CourierConfig, Order, OrderItem, PixelConfig, PixelEventLog,
@@ -17,6 +12,7 @@ import { api } from '../lib/api';
 interface StoreContextType {
   isLoading: boolean;
   cloudError: string | null;
+  retryLoad: () => void;
   products: Product[]; banners: Banner[]; orders: Order[]; users: UserProfile[];
   currentUser: UserProfile | null;
   courierConfig: CourierConfig; pixelConfig: PixelConfig; pixelLogs: PixelEventLog[];
@@ -29,7 +25,7 @@ interface StoreContextType {
   setIsAuthModalOpen: (v: boolean) => void;
   setLastPlacedOrder: (o: Order | null) => void;
   navigate: (p: string) => void;
-  registerUser: (name: string, phone: string, email: string, address?: string, city?: 'Inside Dhaka' | 'Outside Dhaka') => UserProfile;
+  registerUser: (name: string, phone: string, email: string, address?: string, city?: 'Inside Dhaka' | 'Outside Dhaka') => Promise<UserProfile>;
   loginUser: (id: string) => UserProfile | null;
   logoutUser: () => void;
   updateUserProfile: (u: UserProfile) => void;
@@ -51,7 +47,7 @@ interface StoreContextType {
   updatePixelConfig: (c: PixelConfig) => void;
   clearPixelLogs: () => void;
   firePixelEvent: (n: string, d?: Record<string, unknown>) => void;
-  updateSettings: (s: StoreSettings) => void;
+  updateSettings: (s: StoreSettings) => Promise<void>;
   addToCart: (i: OrderItem) => void;
   removeFromCart: (pid: string, pkid?: string) => void;
   updateCartQuantity: (pid: string, pkid: string | undefined, d: number) => void;
@@ -61,30 +57,38 @@ interface StoreContextType {
 
 const Ctx = createContext<StoreContextType | undefined>(undefined);
 
-// LocalStorage only for CART and currentUser (session-level UI)
-const ls = {
+// ⚠️ sessionStorage ONLY (cleared when tab closes) — NOT localStorage
+// শুধু cart আর logged-in user এখানে থাকে, যাতে ট্যাব refresh করলে হারিয়ে না যায়
+// কিন্তু ট্যাব বন্ধ করলে মুছে যাবে — কোনো persistence নেই
+const ss = {
   get<T>(k: string, f: T): T {
-    try { const v = localStorage.getItem('foodghor_' + k); return v ? JSON.parse(v) : f; }
-    catch { return f; }
+    try {
+      const v = sessionStorage.getItem('foodghor_' + k);
+      return v ? JSON.parse(v) : f;
+    } catch { return f; }
   },
   set(k: string, v: any) {
-    try { localStorage.setItem('foodghor_' + k, JSON.stringify(v)); } catch {}
+    try { sessionStorage.setItem('foodghor_' + k, JSON.stringify(v)); } catch {}
+  },
+  remove(k: string) {
+    try { sessionStorage.removeItem('foodghor_' + k); } catch {}
   },
 };
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [cloudError, setCloudError] = useState<string | null>(null);
+  const [loadTrigger, setLoadTrigger] = useState(0);
 
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [banners, setBanners] = useState<Banner[]>(initialBanners);
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [users, setUsers] = useState<UserProfile[]>(initialUsers);
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => ls.get('current_user', null));
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => ss.get('current_user', null));
   const [courierConfig, setCourierConfig] = useState<CourierConfig>(initialCourierConfig);
   const [pixelConfig, setPixelConfig] = useState<PixelConfig>(initialPixelConfig);
   const [settings, setSettings] = useState<StoreSettings>(initialSettings);
-  const [cart, setCart] = useState<OrderItem[]>(() => ls.get('cart', []));
+  const [cart, setCart] = useState<OrderItem[]>(() => ss.get('cart', []));
   const [pixelLogs, setPixelLogs] = useState<PixelEventLog[]>([]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -99,49 +103,53 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return window.location.pathname || '/';
   });
 
-  // ---- Initial load from Cloudflare D1 ----
+  // ---- LOAD FROM D1 (only source of truth) ----
   useEffect(() => {
     let cancelled = false;
+    setIsLoading(true);
+    setCloudError(null);
+
     (async () => {
       try {
         const [prod, ban, ord, usr, st, cr, px] = await Promise.all([
-          api.products.list().catch(() => null),
-          api.banners.list().catch(() => null),
-          api.orders.list().catch(() => null),
-          api.users.list().catch(() => null),
-          api.settings.get().catch(() => null),
-          api.courier.get().catch(() => null),
-          api.pixel.get().catch(() => null),
+          api.products.list(),
+          api.banners.list(),
+          api.orders.list(),
+          api.users.list(),
+          api.settings.get(),
+          api.courier.get(),
+          api.pixel.get(),
         ]);
         if (cancelled) return;
 
-        // If settings returned successfully → we're in Cloudflare mode
-        if (st !== null) {
-          if (prod) setProducts(prod);
-          if (ban) setBanners(ban);
-          if (ord) setOrders(ord);
-          if (usr) setUsers(usr);
-          setSettings(st);
-          if (cr) setCourierConfig(cr);
-          if (px) setPixelConfig(px);
-          setCloudError(null);
-        } else {
-          throw new Error('Settings API did not respond');
-        }
+        if (prod) setProducts(prod);
+        if (ban) setBanners(ban);
+        if (ord) setOrders(ord);
+        if (usr) setUsers(usr);
+        if (st) setSettings(st);
+        if (cr) setCourierConfig(cr);
+        if (px) setPixelConfig(px);
+
+        setCloudError(null);
       } catch (e: any) {
         if (cancelled) return;
-        setCloudError(e?.message || 'Cloud database not reachable');
-        console.warn('[StoreContext] Cloud load failed — using defaults:', e?.message);
+        const msg = e?.message || 'Cloud API not reachable';
+        setCloudError(msg);
+        console.error('[StoreContext] D1 load failed:', msg);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
     })();
-    return () => { cancelled = true; };
-  }, []);
 
-  // Persist cart + currentUser locally (UI state, not data)
-  useEffect(() => ls.set('cart', cart), [cart]);
-  useEffect(() => ls.set('current_user', currentUser), [currentUser]);
+    return () => { cancelled = true; };
+  }, [loadTrigger]);
+
+  // Persist only cart + currentUser to sessionStorage (per-tab, cleared on close)
+  useEffect(() => ss.set('cart', cart), [cart]);
+  useEffect(() => {
+    if (currentUser) ss.set('current_user', currentUser);
+    else ss.remove('current_user');
+  }, [currentUser]);
 
   // Route sync
   useEffect(() => {
@@ -173,21 +181,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const match = currentPath.match(/^\/product\/([^/?#]+)/);
   const activeProductSlug = match ? match[1] : null;
 
-  // --- Helper: fire-and-forget API sync ---
-  const syncErr = (label: string) => (e: any) =>
-    console.error(`[Sync ${label}]`, e?.message || e);
+  const retryLoad = () => setLoadTrigger((n) => n + 1);
+
+  // ---- Sync helper: throw console warning on failure ----
+  const syncFail = (label: string, e: any) =>
+    console.error(`[D1 sync FAILED] ${label}:`, e?.message || e);
 
   // ============ Users ============
-  const registerUser = (name: string, phone: string, email: string, address?: string, city: 'Inside Dhaka' | 'Outside Dhaka' = 'Inside Dhaka'): UserProfile => {
+  const registerUser = async (
+    name: string, phone: string, email: string,
+    address?: string, city: 'Inside Dhaka' | 'Outside Dhaka' = 'Inside Dhaka'
+  ): Promise<UserProfile> => {
     const existing = users.find(
       (u) => u.phone.replace(/\D/g, '') === phone.replace(/\D/g, '') ||
         u.email.toLowerCase() === email.toLowerCase()
     );
     if (existing) {
       const updated = { ...existing, name: name || existing.name, address: address || existing.address, city: city || existing.city };
+      try { await api.users.save(updated); } catch (e) { syncFail('user-update', e); }
       setUsers((p) => p.map((u) => (u.id === existing.id ? updated : u)));
       setCurrentUser(updated);
-      api.users.save(updated).catch(syncErr('user-update'));
       return updated;
     }
     const newUser: UserProfile = {
@@ -196,9 +209,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       city, createdAt: new Date().toISOString(),
       totalOrders: 0, totalSpent: 0, status: 'Active',
     };
+    try { await api.users.save(newUser); } catch (e) { syncFail('user-create', e); }
     setUsers((p) => [newUser, ...p]);
     setCurrentUser(newUser);
-    api.users.save(newUser).catch(syncErr('user-create'));
     return newUser;
   };
 
@@ -217,32 +230,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateUserProfile = (u: UserProfile) => {
     setUsers((p) => p.map((x) => (x.id === u.id ? u : x)));
     if (currentUser?.id === u.id) setCurrentUser(u);
-    api.users.save(u).catch(syncErr('user-save'));
+    api.users.save(u).catch((e) => syncFail('user-save', e));
   };
 
   const deleteUser = (id: string) => {
     setUsers((p) => p.filter((u) => u.id !== id));
     if (currentUser?.id === id) setCurrentUser(null);
-    api.users.remove(id).catch(syncErr('user-del'));
+    api.users.remove(id).catch((e) => syncFail('user-del', e));
   };
 
   // ============ Reviews ============
   const addReview = (data: Omit<ReviewItem, 'id' | 'date' | 'status'>): ReviewItem => {
     const rev: ReviewItem = { ...data, id: `rev-${Date.now()}`, date: 'আজকে', status: 'Approved', verified: true };
-    setProducts((prev) =>
-      prev.map((p) => p.id === data.productId || p.slug === data.productId ? {
-        ...p,
-        landingConfig: { ...p.landingConfig, reviews: [rev, ...(p.landingConfig.reviews || [])] },
-      } : p)
-    );
-    // Save updated product
-    setTimeout(() => {
-      const prod = products.find((p) => p.id === data.productId || p.slug === data.productId);
-      if (prod) {
-        const upd = { ...prod, landingConfig: { ...prod.landingConfig, reviews: [rev, ...(prod.landingConfig.reviews || [])] } };
-        api.products.save(upd).catch(syncErr('review'));
-      }
-    }, 50);
+    setProducts((prev) => prev.map((p) => {
+      if (p.id !== data.productId && p.slug !== data.productId) return p;
+      const upd = { ...p, landingConfig: { ...p.landingConfig, reviews: [rev, ...(p.landingConfig.reviews || [])] } };
+      api.products.save(upd).catch((e) => syncFail('review-add', e));
+      return upd;
+    }));
     return rev;
   };
 
@@ -250,7 +255,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setProducts((prev) => prev.map((p) => {
       if (p.id !== pid && p.slug !== pid) return p;
       const upd = { ...p, landingConfig: { ...p.landingConfig, reviews: p.landingConfig.reviews.map((r) => r.id === rid ? { ...r, status } : r) } };
-      api.products.save(upd).catch(syncErr('review-status'));
+      api.products.save(upd).catch((e) => syncFail('review-status', e));
       return upd;
     }));
   };
@@ -259,7 +264,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setProducts((prev) => prev.map((p) => {
       if (p.id !== pid && p.slug !== pid) return p;
       const upd = { ...p, landingConfig: { ...p.landingConfig, reviews: p.landingConfig.reviews.filter((r) => r.id !== rid) } };
-      api.products.save(upd).catch(syncErr('review-del'));
+      api.products.save(upd).catch((e) => syncFail('review-del', e));
       return upd;
     }));
   };
@@ -287,33 +292,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // ============ Products ============
   const addProduct = (p: Product) => {
     setProducts((prev) => [p, ...prev]);
-    api.products.save(p).catch(syncErr('product-add'));
+    api.products.save(p).catch((e) => syncFail('product-add', e));
   };
   const updateProduct = (p: Product) => {
     setProducts((prev) => prev.map((x) => x.id === p.id ? p : x));
-    api.products.save(p).catch(syncErr('product-update'));
+    api.products.save(p).catch((e) => syncFail('product-update', e));
   };
   const deleteProduct = (id: string) => {
     setProducts((prev) => prev.filter((x) => x.id !== id));
-    api.products.remove(id).catch(syncErr('product-del'));
+    api.products.remove(id).catch((e) => syncFail('product-del', e));
   };
   const getProductBySlug = (s: string) => products.find((p) => p.slug === s);
 
   // ============ Banners ============
   const updateBanner = (b: Banner) => {
     setBanners((prev) => prev.map((x) => x.id === b.id ? b : x));
-    api.banners.save(b).catch(syncErr('banner-update'));
+    api.banners.save(b).catch((e) => syncFail('banner-update', e));
   };
   const addBanner = (data: Omit<Banner, 'id'>): boolean => {
     if (banners.length >= 5) return false;
     const nb: Banner = { ...data, id: `b-${Date.now()}`, order: banners.length + 1 };
     setBanners((prev) => [...prev, nb]);
-    api.banners.save(nb).catch(syncErr('banner-add'));
+    api.banners.save(nb).catch((e) => syncFail('banner-add', e));
     return true;
   };
   const deleteBanner = (id: string) => {
     setBanners((prev) => prev.filter((b) => b.id !== id));
-    api.banners.remove(id).catch(syncErr('banner-del'));
+    api.banners.remove(id).catch((e) => syncFail('banner-del', e));
   };
 
   // ============ Orders ============
@@ -334,17 +339,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     setOrders((prev) => [newOrder, ...prev]);
     setLastPlacedOrder(newOrder);
-    api.orders.save(newOrder).catch(syncErr('order'));
+    api.orders.save(newOrder).catch((e) => syncFail('order-place', e));
 
     if (data.userId) {
-      setUsers((prev) => prev.map((u) => u.id === data.userId ? {
-        ...u, totalOrders: (u.totalOrders || 0) + 1, totalSpent: (u.totalSpent || 0) + newOrder.total,
-      } : u));
-      if (currentUser?.id === data.userId) {
-        setCurrentUser((p) => p ? { ...p, totalOrders: (p.totalOrders || 0) + 1, totalSpent: (p.totalSpent || 0) + newOrder.total } : null);
-      }
       const u = users.find((x) => x.id === data.userId);
-      if (u) api.users.save({ ...u, totalOrders: (u.totalOrders || 0) + 1, totalSpent: (u.totalSpent || 0) + newOrder.total }).catch(syncErr('user-order'));
+      if (u) {
+        const upd = { ...u, totalOrders: (u.totalOrders || 0) + 1, totalSpent: (u.totalSpent || 0) + newOrder.total };
+        setUsers((prev) => prev.map((x) => x.id === data.userId ? upd : x));
+        if (currentUser?.id === data.userId) setCurrentUser(upd);
+        api.users.save(upd).catch((e) => syncFail('user-order-metrics', e));
+      }
     }
 
     firePixelEvent('Purchase', { orderId: oid, value: newOrder.total, currency: 'BDT' });
@@ -364,7 +368,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         note: note || `স্ট্যাটাস: ${bnMap[status]}`,
         location: 'Central Hub',
       }]};
-      api.orders.save(upd).catch(syncErr('order-status'));
+      api.orders.save(upd).catch((e) => syncFail('order-status', e));
       return upd;
     }));
   };
@@ -378,7 +382,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         note: note || `${courier} → ${code}`,
         location: `${courier} Hub`,
       }]};
-      api.orders.save(upd).catch(syncErr('courier-assign'));
+      api.orders.save(upd).catch((e) => syncFail('courier-assign', e));
       return upd;
     }));
   };
@@ -386,16 +390,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // ============ Config ============
   const updateCourierConfig = (c: CourierConfig) => {
     setCourierConfig(c);
-    api.courier.save(c).catch(syncErr('courier'));
+    api.courier.save(c).catch((e) => syncFail('courier', e));
   };
   const updatePixelConfig = (c: PixelConfig) => {
     setPixelConfig(c);
-    api.pixel.save(c).catch(syncErr('pixel'));
+    api.pixel.save(c).catch((e) => syncFail('pixel', e));
   };
   const clearPixelLogs = () => setPixelLogs([]);
-  const updateSettings = (s: StoreSettings) => {
+
+  // ⚠️ updateSettings is now ASYNC and THROWS on failure
+  const updateSettings = async (s: StoreSettings) => {
+    await api.settings.save(s);  // throws if fails — no silent failure
     setSettings(s);
-    api.settings.save(s).catch(syncErr('settings'));
   };
 
   // ============ Cart ============
@@ -421,7 +427,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <Ctx.Provider value={{
-      isLoading, cloudError,
+      isLoading, cloudError, retryLoad,
       products, banners, orders, users, currentUser, courierConfig, pixelConfig,
       pixelLogs, settings, cart, isCartOpen, isTrackingOpen, isAuthModalOpen,
       currentPath, activeProductSlug, lastPlacedOrder,

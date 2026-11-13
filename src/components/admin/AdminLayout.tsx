@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   LayoutDashboard,
   Package,
@@ -22,25 +22,27 @@ import {
   AlertTriangle,
   Key,
   CheckCircle2,
-} from 'lucide-react';
-import { useStore } from '../../context/StoreContext';
-import { AdminDashboard } from './AdminDashboard';
-import { AdminProducts } from './AdminProducts';
-import { AdminBanners } from './AdminBanners';
-import { AdminOrders } from './AdminOrders';
-import { AdminCourier } from './AdminCourier';
-import { AdminPixel } from './AdminPixel';
-import { AdminSettings } from './AdminSettings';
-import { AdminUsers } from './AdminUsers';
+} from "lucide-react";
+import { useStore } from "../../context/StoreContext";
+import { AdminDashboard } from "./AdminDashboard";
+import { AdminProducts } from "./AdminProducts";
+import { AdminBanners } from "./AdminBanners";
+import { AdminOrders } from "./AdminOrders";
+import { AdminCourier } from "./AdminCourier";
+import { AdminPixel } from "./AdminPixel";
+import { AdminSettings } from "./AdminSettings";
+import { AdminUsers } from "./AdminUsers";
 
 // ============================================================
 // 🔑 Recovery Code Generator
 // ============================================================
 const generateRecoveryCode = (): string => {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusing chars (0/O, 1/I/L)
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no confusing chars (0/O, 1/I/L)
   const array = new Uint8Array(16);
   crypto.getRandomValues(array);
-  const code = Array.from(array).map((b) => chars[b % chars.length]).join('');
+  const code = Array.from(array)
+    .map((b) => chars[b % chars.length])
+    .join("");
   return `${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}-${code.slice(12, 16)}`;
 };
 
@@ -56,9 +58,21 @@ const PasswordStrengthBar: React.FC<{ pwd: string }> = ({ pwd }) => {
     return 4;
   };
   const level = getLevel(pwd);
-  const labels = ['', 'খুব দুর্বল', 'দুর্বল', 'ভালো', 'শক্তিশালী'];
-  const colors = ['', 'bg-rose-500', 'bg-amber-500', 'bg-emerald-500', 'bg-emerald-700'];
-  const textColors = ['', 'text-rose-600', 'text-amber-600', 'text-emerald-700', 'text-emerald-800'];
+  const labels = ["", "খুব দুর্বল", "দুর্বল", "ভালো", "শক্তিশালী"];
+  const colors = [
+    "",
+    "bg-rose-500",
+    "bg-amber-500",
+    "bg-emerald-500",
+    "bg-emerald-700",
+  ];
+  const textColors = [
+    "",
+    "text-rose-600",
+    "text-amber-600",
+    "text-emerald-700",
+    "text-emerald-800",
+  ];
   return (
     <div className="mt-2">
       <div className="flex gap-1">
@@ -66,14 +80,16 @@ const PasswordStrengthBar: React.FC<{ pwd: string }> = ({ pwd }) => {
           <div
             key={i}
             className={`h-1 flex-1 rounded-full transition-colors ${
-              i <= level ? colors[level] : 'bg-stone-200'
+              i <= level ? colors[level] : "bg-stone-200"
             }`}
           />
         ))}
       </div>
       <div className="flex items-center justify-between mt-1">
         <span className="text-[10px] text-stone-500">শক্তি:</span>
-        <span className={`text-[10px] font-bold ${textColors[level]}`}>{labels[level]}</span>
+        <span className={`text-[10px] font-bold ${textColors[level]}`}>
+          {labels[level]}
+        </span>
       </div>
     </div>
   );
@@ -109,9 +125,9 @@ const RecoveryCodeDisplayScreen: React.FC<{
       `Code: ${code}\n\n` +
       `Keep this code safe. You will need this if you forget your admin password.\n` +
       `Generated: ${new Date().toLocaleString()}\n`;
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `foodghor-recovery-code-${Date.now()}.txt`;
     a.click();
@@ -128,7 +144,7 @@ const RecoveryCodeDisplayScreen: React.FC<{
             <Key className="w-8 h-8" />
           </div>
           <h2 className="text-xl font-black text-stone-900 font-serif">
-            {isReset ? 'আপনার নতুন রিকভারি কোড' : 'আপনার রিকভারি কোড'}
+            {isReset ? "আপনার নতুন রিকভারি কোড" : "আপনার রিকভারি কোড"}
           </h2>
           <p className="text-xs text-stone-500 mt-1">
             পাসওয়ার্ড ভুলে গেলে এই কোড দিয়ে পাসওয়ার্ড রিসেট করবেন
@@ -154,14 +170,14 @@ const RecoveryCodeDisplayScreen: React.FC<{
             ) : (
               <Copy className="w-4 h-4" />
             )}
-            <span>{copied ? 'কপি হয়েছে!' : 'কপি করুন'}</span>
+            <span>{copied ? "কপি হয়েছে!" : "কপি করুন"}</span>
           </button>
           <button
             onClick={handleDownload}
             className="py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
           >
             <Download className="w-4 h-4" />
-            <span>{downloaded ? 'ডাউনলোড হয়েছে!' : 'ডাউনলোড'}</span>
+            <span>{downloaded ? "ডাউনলোড হয়েছে!" : "ডাউনলোড"}</span>
           </button>
         </div>
 
@@ -169,10 +185,12 @@ const RecoveryCodeDisplayScreen: React.FC<{
           <div className="flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
             <div>
-              <strong className="block mb-0.5">⚠️ এই কোড শুধু একবারই দেখা যাবে!</strong>
+              <strong className="block mb-0.5">
+                ⚠️ এই কোড শুধু একবারই দেখা যাবে!
+              </strong>
               <span>
-                এখনই লিখে রাখুন বা ডাউনলোড করুন। কোড ছাড়া পাসওয়ার্ড ভুলে গেলে অ্যাকাউন্ট রিকভার
-                করা যাবে না।
+                এখনই লিখে রাখুন বা ডাউনলোড করুন। কোড ছাড়া পাসওয়ার্ড ভুলে গেলে
+                অ্যাকাউন্ট রিকভার করা যাবে না।
               </span>
             </div>
           </div>
@@ -195,8 +213,8 @@ const RecoveryCodeDisplayScreen: React.FC<{
           disabled={!confirmed}
           className={`w-full py-3.5 px-4 font-bold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
             confirmed
-              ? 'bg-emerald-800 hover:bg-emerald-900 text-white cursor-pointer'
-              : 'bg-stone-300 text-stone-500 cursor-not-allowed'
+              ? "bg-emerald-800 hover:bg-emerald-900 text-white cursor-pointer"
+              : "bg-stone-300 text-stone-500 cursor-not-allowed"
           }`}
         >
           <CheckCircle2 className="w-4 h-4" />
@@ -211,55 +229,58 @@ const RecoveryCodeDisplayScreen: React.FC<{
 // 📌 Auth Mode Type
 // ============================================================
 type AuthMode =
-  | 'login'
-  | 'setup'
-  | 'setup-recovery-show'
-  | 'forgot-enter-code'
-  | 'forgot-new-password'
-  | 'forgot-new-recovery-show';
+  | "login"
+  | "setup"
+  | "setup-recovery-show"
+  | "forgot-enter-code"
+  | "forgot-new-password"
+  | "forgot-new-recovery-show";
 
 // ============================================================
 // 🎯 Main Component
 // ============================================================
 export const AdminLayout: React.FC = () => {
   const { settings, navigate, orders, updateSettings } = useStore();
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [activeTab, setActiveTab] = useState<string>("dashboard");
 
-  const isPasswordSetUp = !!settings.adminPin && settings.adminPin.trim().length > 0;
+  const isPasswordSetUp =
+    !!settings.adminPin && settings.adminPin.trim().length > 0;
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
-    () => sessionStorage.getItem('foodghor_admin_auth') === 'true'
+    () => sessionStorage.getItem("foodghor_admin_auth") === "true",
   );
 
   const [authMode, setAuthMode] = useState<AuthMode>(
-    isPasswordSetUp ? 'login' : 'setup'
+    isPasswordSetUp ? "login" : "setup",
   );
 
   // ---- Setup state ----
-  const [setupPassword, setSetupPassword] = useState('');
-  const [setupConfirm, setSetupConfirm] = useState('');
-  const [setupError, setSetupError] = useState('');
+  const [setupPassword, setSetupPassword] = useState("");
+  const [setupConfirm, setSetupConfirm] = useState("");
+  const [setupError, setSetupError] = useState("");
   const [showSetupPwd, setShowSetupPwd] = useState(false);
 
   // ---- Shared pending state (during recovery code display) ----
-  const [pendingPassword, setPendingPassword] = useState('');
-  const [pendingRecoveryCode, setPendingRecoveryCode] = useState('');
+  const [pendingPassword, setPendingPassword] = useState("");
+  const [pendingRecoveryCode, setPendingRecoveryCode] = useState("");
   const [recoverySavedConfirmed, setRecoverySavedConfirmed] = useState(false);
 
   // ---- Login state ----
-  const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState('');
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
   const [showLoginPwd, setShowLoginPwd] = useState(false);
 
   // ---- Forgot password state ----
-  const [recoveryCodeInput, setRecoveryCodeInput] = useState('');
-  const [recoveryError, setRecoveryError] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
-  const [newPasswordError, setNewPasswordError] = useState('');
+  const [recoveryCodeInput, setRecoveryCodeInput] = useState("");
+  const [recoveryError, setRecoveryError] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+  const [newPasswordError, setNewPasswordError] = useState("");
   const [showNewPwd, setShowNewPwd] = useState(false);
-  const [newRecoveryCodeForDisplay, setNewRecoveryCodeForDisplay] = useState('');
-  const [newRecoverySavedConfirmed, setNewRecoverySavedConfirmed] = useState(false);
+  const [newRecoveryCodeForDisplay, setNewRecoveryCodeForDisplay] =
+    useState("");
+  const [newRecoverySavedConfirmed, setNewRecoverySavedConfirmed] =
+    useState(false);
 
   // ============================================================
   // Handlers
@@ -267,14 +288,14 @@ export const AdminLayout: React.FC = () => {
 
   const handleSetup = (e: React.FormEvent) => {
     e.preventDefault();
-    setSetupError('');
+    setSetupError("");
 
     if (setupPassword.length < 6) {
-      setSetupError('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
+      setSetupError("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।");
       return;
     }
     if (setupPassword !== setupConfirm) {
-      setSetupError('দুইটি পাসওয়ার্ড মিলছে না। আবার চেষ্টা করুন।');
+      setSetupError("দুইটি পাসওয়ার্ড মিলছে না। আবার চেষ্টা করুন।");
       return;
     }
 
@@ -283,92 +304,108 @@ export const AdminLayout: React.FC = () => {
     setPendingPassword(setupPassword);
     setPendingRecoveryCode(code);
     setRecoverySavedConfirmed(false);
-    setAuthMode('setup-recovery-show');
+    setAuthMode("setup-recovery-show");
   };
 
-  const handleConfirmSetupRecovery = () => {
+  const [isSavingSetup, setIsSavingSetup] = useState(false);
+
+  const handleConfirmSetupRecovery = async () => {
     if (!recoverySavedConfirmed) {
-      alert('চেকবক্সে টিক দিন — আপনি রিকভারি কোড সেভ করেছেন কিনা নিশ্চিত করুন।');
+      alert(
+        "চেকবক্সে টিক দিন — আপনি রিকভারি কোড সেভ করেছেন কিনা নিশ্চিত করুন।",
+      );
       return;
     }
-    // NOW save password + recovery code
-    updateSettings({
-      ...settings,
-      adminPin: pendingPassword,
-      adminRecoveryCode: pendingRecoveryCode,
-    });
-    sessionStorage.setItem('foodghor_admin_auth', 'true');
-    setIsAuthenticated(true);
-    // Reset
-    setPendingPassword('');
-    setPendingRecoveryCode('');
-    setSetupPassword('');
-    setSetupConfirm('');
-    setRecoverySavedConfirmed(false);
+    setIsSavingSetup(true);
+    try {
+      await updateSettings({
+        ...settings,
+        adminPin: pendingPassword,
+        adminRecoveryCode: pendingRecoveryCode,
+      });
+      sessionStorage.setItem("foodghor_admin_auth", "true");
+      setIsAuthenticated(true);
+      setPendingPassword("");
+      setPendingRecoveryCode("");
+      setSetupPassword("");
+      setSetupConfirm("");
+      setRecoverySavedConfirmed(false);
+    } catch (e: any) {
+      alert(
+        "D1-এ পাসওয়ার্ড সেভ ব্যর্থ!\n\n" +
+          (e?.message || "Unknown error") +
+          "\n\nCloudflare D1 binding চেক করুন।",
+      );
+    } finally {
+      setIsSavingSetup(false);
+    }
   };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setPinError('');
+    setPinError("");
 
     if (pinInput.trim() === settings.adminPin) {
-      sessionStorage.setItem('foodghor_admin_auth', 'true');
+      sessionStorage.setItem("foodghor_admin_auth", "true");
       setIsAuthenticated(true);
-      setPinInput('');
+      setPinInput("");
     } else {
-      setPinError('ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।');
+      setPinError("ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।");
     }
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('foodghor_admin_auth');
+    sessionStorage.removeItem("foodghor_admin_auth");
     setIsAuthenticated(false);
-    setAuthMode('login');
-    navigate('/');
+    setAuthMode("login");
+    navigate("/");
   };
 
   // ---- Forgot password flow ----
   const handleForgotStart = () => {
-    setAuthMode('forgot-enter-code');
-    setRecoveryCodeInput('');
-    setRecoveryError('');
+    setAuthMode("forgot-enter-code");
+    setRecoveryCodeInput("");
+    setRecoveryError("");
   };
 
   const handleVerifyRecoveryCode = (e: React.FormEvent) => {
     e.preventDefault();
-    setRecoveryError('');
+    setRecoveryError("");
 
-    const stored = (settings.adminRecoveryCode || '').trim().toUpperCase().replace(/\s/g, '');
-    const entered = recoveryCodeInput.trim().toUpperCase().replace(/\s/g, '');
+    const stored = (settings.adminRecoveryCode || "")
+      .trim()
+      .toUpperCase()
+      .replace(/\s/g, "");
+    const entered = recoveryCodeInput.trim().toUpperCase().replace(/\s/g, "");
 
     if (!stored) {
       setRecoveryError(
-        'এই অ্যাকাউন্টে কোনো রিকভারি কোড সেট করা নেই। লগইন করে সেটিংস থেকে কোড সেট করুন।'
+        "এই অ্যাকাউন্টে কোনো রিকভারি কোড সেট করা নেই। লগইন করে সেটিংস থেকে কোড সেট করুন।",
       );
       return;
     }
 
     if (entered !== stored) {
-      setRecoveryError('ভুল রিকভারি কোড! আবার চেষ্টা করুন।');
+      setRecoveryError("ভুল রিকভারি কোড! আবার চেষ্টা করুন।");
       return;
     }
 
-    setAuthMode('forgot-new-password');
-    setNewPassword('');
-    setNewPasswordConfirm('');
-    setNewPasswordError('');
+    setAuthMode("forgot-new-password");
+    setNewPassword("");
+    setNewPasswordConfirm("");
+    setNewPasswordError("");
   };
 
   const handleResetPassword = (e: React.FormEvent) => {
     e.preventDefault();
-    setNewPasswordError('');
+    setNewPasswordError("");
 
     if (newPassword.length < 6) {
-      setNewPasswordError('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
+      setNewPasswordError("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।");
       return;
     }
     if (newPassword !== newPasswordConfirm) {
-      setNewPasswordError('দুইটি পাসওয়ার্ড মিলছে না।');
+      setNewPasswordError("দুইটি পাসওয়ার্ড মিলছে না।");
       return;
     }
 
@@ -377,39 +414,46 @@ export const AdminLayout: React.FC = () => {
     setPendingPassword(newPassword);
     setNewRecoveryCodeForDisplay(newCode);
     setNewRecoverySavedConfirmed(false);
-    setAuthMode('forgot-new-recovery-show');
+    setAuthMode("forgot-new-recovery-show");
   };
 
-  const handleConfirmNewRecovery = () => {
+  const handleConfirmNewRecovery = async () => {
     if (!newRecoverySavedConfirmed) {
-      alert('চেকবক্সে টিক দিন — আপনি নতুন রিকভারি কোড সেভ করেছেন কিনা নিশ্চিত করুন।');
+      alert(
+        "চেকবক্সে টিক দিন — আপনি নতুন রিকভারি কোড সেভ করেছেন কিনা নিশ্চিত করুন।",
+      );
       return;
     }
-    updateSettings({
-      ...settings,
-      adminPin: pendingPassword,
-      adminRecoveryCode: newRecoveryCodeForDisplay,
-    });
-    sessionStorage.setItem('foodghor_admin_auth', 'true');
-    setIsAuthenticated(true);
-    // Reset
-    setPendingPassword('');
-    setNewRecoveryCodeForDisplay('');
-    setNewPassword('');
-    setNewPasswordConfirm('');
-    setRecoveryCodeInput('');
-    setNewRecoverySavedConfirmed(false);
+    try {
+      await updateSettings({
+        ...settings,
+        adminPin: pendingPassword,
+        adminRecoveryCode: newRecoveryCodeForDisplay,
+      });
+      sessionStorage.setItem("foodghor_admin_auth", "true");
+      setIsAuthenticated(true);
+      setPendingPassword("");
+      setNewRecoveryCodeForDisplay("");
+      setNewPassword("");
+      setNewPasswordConfirm("");
+      setRecoveryCodeInput("");
+      setNewRecoverySavedConfirmed(false);
+    } catch (e: any) {
+      alert(
+        "D1-এ পাসওয়ার্ড সেভ ব্যর্থ!\n\n" + (e?.message || "Unknown error"),
+      );
+    }
   };
 
   const handleCancelForgot = () => {
-    setAuthMode('login');
-    setRecoveryCodeInput('');
-    setRecoveryError('');
-    setNewPassword('');
-    setNewPasswordConfirm('');
-    setNewPasswordError('');
-    setNewRecoveryCodeForDisplay('');
-    setPendingPassword('');
+    setAuthMode("login");
+    setRecoveryCodeInput("");
+    setRecoveryError("");
+    setNewPassword("");
+    setNewPasswordConfirm("");
+    setNewPasswordError("");
+    setNewRecoveryCodeForDisplay("");
+    setPendingPassword("");
     setRecoverySavedConfirmed(false);
     setNewRecoverySavedConfirmed(false);
   };
@@ -419,7 +463,7 @@ export const AdminLayout: React.FC = () => {
   // ============================================================
   if (!isAuthenticated) {
     // Recovery code display after setup
-    if (authMode === 'setup-recovery-show') {
+    if (authMode === "setup-recovery-show") {
       return (
         <RecoveryCodeDisplayScreen
           code={pendingRecoveryCode}
@@ -431,7 +475,7 @@ export const AdminLayout: React.FC = () => {
     }
 
     // Recovery code display after password reset
-    if (authMode === 'forgot-new-recovery-show') {
+    if (authMode === "forgot-new-recovery-show") {
       return (
         <RecoveryCodeDisplayScreen
           code={newRecoveryCodeForDisplay}
@@ -444,7 +488,7 @@ export const AdminLayout: React.FC = () => {
     }
 
     // Setup screen
-    if (authMode === 'setup') {
+    if (authMode === "setup") {
       return (
         <div className="min-h-screen bg-stone-900 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-stone-200 text-center">
@@ -455,7 +499,8 @@ export const AdminLayout: React.FC = () => {
               প্রথমবার অ্যাডমিন সেটআপ
             </h2>
             <p className="text-xs text-stone-500 mt-1">
-              {settings.banglaName} অ্যাডমিন প্যানেলে ঢোকার জন্য একটি পাসওয়ার্ড তৈরি করুন
+              {settings.banglaName} অ্যাডমিন প্যানেলে ঢোকার জন্য একটি পাসওয়ার্ড
+              তৈরি করুন
             </p>
 
             <form onSubmit={handleSetup} className="mt-6 space-y-4 text-left">
@@ -473,7 +518,7 @@ export const AdminLayout: React.FC = () => {
                 <div className="relative">
                   <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type={showSetupPwd ? 'text' : 'password'}
+                    type={showSetupPwd ? "text" : "password"}
                     autoFocus
                     required
                     value={setupPassword}
@@ -486,7 +531,11 @@ export const AdminLayout: React.FC = () => {
                     onClick={() => setShowSetupPwd(!showSetupPwd)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 cursor-pointer"
                   >
-                    {showSetupPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showSetupPwd ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
                 <PasswordStrengthBar pwd={setupPassword} />
@@ -499,20 +548,21 @@ export const AdminLayout: React.FC = () => {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type={showSetupPwd ? 'text' : 'password'}
+                    type={showSetupPwd ? "text" : "password"}
                     required
                     value={setupConfirm}
                     onChange={(e) => setSetupConfirm(e.target.value)}
                     placeholder="আবার একই পাসওয়ার্ড দিন"
                     className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 font-mono ${
                       setupConfirm.length > 0 && setupPassword !== setupConfirm
-                        ? 'border-rose-300 focus:ring-rose-200 focus:border-rose-500'
-                        : 'border-stone-300 focus:ring-emerald-700/30 focus:border-emerald-700'
+                        ? "border-rose-300 focus:ring-rose-200 focus:border-rose-500"
+                        : "border-stone-300 focus:ring-emerald-700/30 focus:border-emerald-700"
                     }`}
                   />
-                  {setupConfirm.length > 0 && setupPassword === setupConfirm && (
-                    <Check className="w-4 h-4 text-emerald-600 absolute right-3 top-1/2 -translate-y-1/2" />
-                  )}
+                  {setupConfirm.length > 0 &&
+                    setupPassword === setupConfirm && (
+                      <Check className="w-4 h-4 text-emerald-600 absolute right-3 top-1/2 -translate-y-1/2" />
+                    )}
                 </div>
                 {setupConfirm.length > 0 && setupPassword !== setupConfirm && (
                   <p className="text-[11px] text-rose-600 font-medium mt-1">
@@ -524,8 +574,9 @@ export const AdminLayout: React.FC = () => {
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
                 <span>
-                  পাসওয়ার্ড তৈরি হলে একটি <strong>রিকভারি কোড</strong> দেখানো হবে — সেটি অবশ্যই
-                  সেভ করবেন। পাসওয়ার্ড ভুলে গেলে ওই কোড দিয়েই রিসেট করতে হবে।
+                  পাসওয়ার্ড তৈরি হলে একটি <strong>রিকভারি কোড</strong> দেখানো
+                  হবে — সেটি অবশ্যই সেভ করবেন। পাসওয়ার্ড ভুলে গেলে ওই কোড
+                  দিয়েই রিসেট করতে হবে।
                 </span>
               </div>
 
@@ -538,7 +589,7 @@ export const AdminLayout: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => navigate('/')}
+                onClick={() => navigate("/")}
                 className="w-full py-2.5 text-stone-500 hover:text-stone-800 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
@@ -551,7 +602,7 @@ export const AdminLayout: React.FC = () => {
     }
 
     // Forgot: enter recovery code
-    if (authMode === 'forgot-enter-code') {
+    if (authMode === "forgot-enter-code") {
       return (
         <div className="min-h-screen bg-stone-900 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-stone-200 text-center">
@@ -565,7 +616,10 @@ export const AdminLayout: React.FC = () => {
               পাসওয়ার্ড রিসেট করতে হলে আগে আপনার রিকভারি কোডটি দিন
             </p>
 
-            <form onSubmit={handleVerifyRecoveryCode} className="mt-6 space-y-4 text-left">
+            <form
+              onSubmit={handleVerifyRecoveryCode}
+              className="mt-6 space-y-4 text-left"
+            >
               {recoveryError && (
                 <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-semibold flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -582,7 +636,9 @@ export const AdminLayout: React.FC = () => {
                   autoFocus
                   required
                   value={recoveryCodeInput}
-                  onChange={(e) => setRecoveryCodeInput(e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    setRecoveryCodeInput(e.target.value.toUpperCase())
+                  }
                   placeholder="XXXX-XXXX-XXXX-XXXX"
                   className="w-full px-4 py-3 rounded-xl border border-stone-300 text-sm font-mono tracking-wider text-center focus:outline-none focus:ring-2 focus:ring-emerald-700/30 focus:border-emerald-700"
                 />
@@ -613,7 +669,7 @@ export const AdminLayout: React.FC = () => {
     }
 
     // Forgot: set new password
-    if (authMode === 'forgot-new-password') {
+    if (authMode === "forgot-new-password") {
       return (
         <div className="min-h-screen bg-stone-900 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-stone-200 text-center">
@@ -627,7 +683,10 @@ export const AdminLayout: React.FC = () => {
               নতুন পাসওয়ার্ড সেট হলে একটি নতুন রিকভারি কোডও তৈরি হবে
             </p>
 
-            <form onSubmit={handleResetPassword} className="mt-6 space-y-4 text-left">
+            <form
+              onSubmit={handleResetPassword}
+              className="mt-6 space-y-4 text-left"
+            >
               {newPasswordError && (
                 <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-semibold flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -642,7 +701,7 @@ export const AdminLayout: React.FC = () => {
                 <div className="relative">
                   <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type={showNewPwd ? 'text' : 'password'}
+                    type={showNewPwd ? "text" : "password"}
                     autoFocus
                     required
                     value={newPassword}
@@ -655,7 +714,11 @@ export const AdminLayout: React.FC = () => {
                     onClick={() => setShowNewPwd(!showNewPwd)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 cursor-pointer"
                   >
-                    {showNewPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showNewPwd ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
                 <PasswordStrengthBar pwd={newPassword} />
@@ -668,20 +731,22 @@ export const AdminLayout: React.FC = () => {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type={showNewPwd ? 'text' : 'password'}
+                    type={showNewPwd ? "text" : "password"}
                     required
                     value={newPasswordConfirm}
                     onChange={(e) => setNewPasswordConfirm(e.target.value)}
                     placeholder="আবার একই পাসওয়ার্ড দিন"
                     className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 font-mono ${
-                      newPasswordConfirm.length > 0 && newPassword !== newPasswordConfirm
-                        ? 'border-rose-300 focus:ring-rose-200 focus:border-rose-500'
-                        : 'border-stone-300 focus:ring-emerald-700/30 focus:border-emerald-700'
+                      newPasswordConfirm.length > 0 &&
+                      newPassword !== newPasswordConfirm
+                        ? "border-rose-300 focus:ring-rose-200 focus:border-rose-500"
+                        : "border-stone-300 focus:ring-emerald-700/30 focus:border-emerald-700"
                     }`}
                   />
-                  {newPasswordConfirm.length > 0 && newPassword === newPasswordConfirm && (
-                    <Check className="w-4 h-4 text-emerald-600 absolute right-3 top-1/2 -translate-y-1/2" />
-                  )}
+                  {newPasswordConfirm.length > 0 &&
+                    newPassword === newPasswordConfirm && (
+                      <Check className="w-4 h-4 text-emerald-600 absolute right-3 top-1/2 -translate-y-1/2" />
+                    )}
                 </div>
               </div>
 
@@ -735,7 +800,7 @@ export const AdminLayout: React.FC = () => {
               <div className="relative">
                 <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  type={showLoginPwd ? 'text' : 'password'}
+                  type={showLoginPwd ? "text" : "password"}
                   autoFocus
                   required
                   value={pinInput}
@@ -748,7 +813,11 @@ export const AdminLayout: React.FC = () => {
                   onClick={() => setShowLoginPwd(!showLoginPwd)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 cursor-pointer"
                 >
-                  {showLoginPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showLoginPwd ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -770,7 +839,7 @@ export const AdminLayout: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               className="w-full py-2.5 text-stone-500 hover:text-stone-800 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -785,8 +854,12 @@ export const AdminLayout: React.FC = () => {
   // ============================================================
   // Render: Authenticated admin layout
   // ============================================================
-  const pendingOrdersCount = orders.filter((o) => o.status === 'Pending').length;
-  const hasRecoveryCode = !!(settings.adminRecoveryCode && settings.adminRecoveryCode.trim().length > 0);
+  const pendingOrdersCount = orders.filter(
+    (o) => o.status === "Pending",
+  ).length;
+  const hasRecoveryCode = !!(
+    settings.adminRecoveryCode && settings.adminRecoveryCode.trim().length > 0
+  );
 
   return (
     <div className="min-h-screen bg-stone-100 flex flex-col md:flex-row font-sans">
@@ -808,7 +881,7 @@ export const AdminLayout: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               className="p-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-white"
               title="ওয়েবসাইট ভিউ দেখুন"
             >
@@ -818,44 +891,44 @@ export const AdminLayout: React.FC = () => {
 
           <nav className="p-3 space-y-1 text-xs font-semibold">
             <button
-              onClick={() => setActiveTab('dashboard')}
+              onClick={() => setActiveTab("dashboard")}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${
-                activeTab === 'dashboard'
-                  ? 'bg-emerald-800 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-white hover:bg-stone-900'
+                activeTab === "dashboard"
+                  ? "bg-emerald-800 text-white shadow-sm"
+                  : "text-stone-400 hover:text-white hover:bg-stone-900"
               }`}
             >
               <LayoutDashboard className="w-4 h-4" />
               <span>ড্যাশবোর্ড ও ওভারভিউ</span>
             </button>
             <button
-              onClick={() => setActiveTab('products')}
+              onClick={() => setActiveTab("products")}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${
-                activeTab === 'products'
-                  ? 'bg-emerald-800 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-white hover:bg-stone-900'
+                activeTab === "products"
+                  ? "bg-emerald-800 text-white shadow-sm"
+                  : "text-stone-400 hover:text-white hover:bg-stone-900"
               }`}
             >
               <Package className="w-4 h-4" />
               <span>প্রোডাক্ট ও সেলস ফানেল</span>
             </button>
             <button
-              onClick={() => setActiveTab('banners')}
+              onClick={() => setActiveTab("banners")}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${
-                activeTab === 'banners'
-                  ? 'bg-emerald-800 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-white hover:bg-stone-900'
+                activeTab === "banners"
+                  ? "bg-emerald-800 text-white shadow-sm"
+                  : "text-stone-400 hover:text-white hover:bg-stone-900"
               }`}
             >
               <Images className="w-4 h-4" />
               <span>৫টি ব্যানার স্লাইডার</span>
             </button>
             <button
-              onClick={() => setActiveTab('orders')}
+              onClick={() => setActiveTab("orders")}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${
-                activeTab === 'orders'
-                  ? 'bg-emerald-800 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-white hover:bg-stone-900'
+                activeTab === "orders"
+                  ? "bg-emerald-800 text-white shadow-sm"
+                  : "text-stone-400 hover:text-white hover:bg-stone-900"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -869,44 +942,44 @@ export const AdminLayout: React.FC = () => {
               )}
             </button>
             <button
-              onClick={() => setActiveTab('users')}
+              onClick={() => setActiveTab("users")}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${
-                activeTab === 'users'
-                  ? 'bg-emerald-800 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-white hover:bg-stone-900'
+                activeTab === "users"
+                  ? "bg-emerald-800 text-white shadow-sm"
+                  : "text-stone-400 hover:text-white hover:bg-stone-900"
               }`}
             >
               <Users className="w-4 h-4" />
               <span>কাস্টমার ডাটাবেজ</span>
             </button>
             <button
-              onClick={() => setActiveTab('courier')}
+              onClick={() => setActiveTab("courier")}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${
-                activeTab === 'courier'
-                  ? 'bg-emerald-800 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-white hover:bg-stone-900'
+                activeTab === "courier"
+                  ? "bg-emerald-800 text-white shadow-sm"
+                  : "text-stone-400 hover:text-white hover:bg-stone-900"
               }`}
             >
               <Truck className="w-4 h-4" />
               <span>কুরিয়ার ট্র্যাকিং সেটআপ</span>
             </button>
             <button
-              onClick={() => setActiveTab('pixel')}
+              onClick={() => setActiveTab("pixel")}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${
-                activeTab === 'pixel'
-                  ? 'bg-emerald-800 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-white hover:bg-stone-900'
+                activeTab === "pixel"
+                  ? "bg-emerald-800 text-white shadow-sm"
+                  : "text-stone-400 hover:text-white hover:bg-stone-900"
               }`}
             >
               <Activity className="w-4 h-4" />
               <span>Facebook Pixel সেটআপ</span>
             </button>
             <button
-              onClick={() => setActiveTab('settings')}
+              onClick={() => setActiveTab("settings")}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${
-                activeTab === 'settings'
-                  ? 'bg-emerald-800 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-white hover:bg-stone-900'
+                activeTab === "settings"
+                  ? "bg-emerald-800 text-white shadow-sm"
+                  : "text-stone-400 hover:text-white hover:bg-stone-900"
               }`}
             >
               <Settings className="w-4 h-4" />
@@ -917,7 +990,7 @@ export const AdminLayout: React.FC = () => {
 
         <div className="p-4 border-t border-stone-800 space-y-2">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="w-full flex items-center gap-2 px-3 py-2 text-stone-400 hover:text-white text-xs font-semibold rounded-lg hover:bg-stone-900 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 text-emerald-400" />
@@ -940,10 +1013,10 @@ export const AdminLayout: React.FC = () => {
           <div className="bg-amber-50 border-b border-amber-200 px-4 sm:px-6 py-2 text-[11px] sm:text-xs text-amber-900 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
             <span className="flex-1">
-              আপনার অ্যাকাউন্টে <strong>রিকভারি কোড সেট করা নেই</strong>। পাসওয়ার্ড ভুলে গেলে
-              লগইন করতে পারবেন না।{' '}
+              আপনার অ্যাকাউন্টে <strong>রিকভারি কোড সেট করা নেই</strong>।
+              পাসওয়ার্ড ভুলে গেলে লগইন করতে পারবেন না।{" "}
               <button
-                onClick={() => setActiveTab('settings')}
+                onClick={() => setActiveTab("settings")}
                 className="underline font-bold hover:text-amber-950"
               >
                 এখনই সেট করুন →
@@ -955,21 +1028,24 @@ export const AdminLayout: React.FC = () => {
         <div className="bg-white border-b border-stone-200 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-20">
           <div>
             <h1 className="font-bold text-stone-900 text-base sm:text-lg font-serif">
-              {activeTab === 'dashboard' && 'ড্যাশবোর্ড ও ওভারভিউ'}
-              {activeTab === 'products' && 'প্রোডাক্ট ও সেলস ফানেল ল্যান্ডিং পেজ বিল্ডার'}
-              {activeTab === 'banners' && 'হোমপেজ ব্যানার ক্যারোসেল (৫টি ফটো)'}
-              {activeTab === 'orders' && 'অর্ডার লিস্ট ও ক্যাশ মেমো'}
-              {activeTab === 'users' && 'কাস্টমার ডাটাবেজ ও প্রোফাইল'}
-              {activeTab === 'courier' && 'কুরিয়ার সার্ভিস ও ট্র্যাকিং সেটআপ'}
-              {activeTab === 'pixel' && 'Facebook Pixel & Events Setup'}
-              {activeTab === 'settings' && 'লোগো ও জেনারেল সেটিংস'}
+              {activeTab === "dashboard" && "ড্যাশবোর্ড ও ওভারভিউ"}
+              {activeTab === "products" &&
+                "প্রোডাক্ট ও সেলস ফানেল ল্যান্ডিং পেজ বিল্ডার"}
+              {activeTab === "banners" && "হোমপেজ ব্যানার ক্যারোসেল (৫টি ফটো)"}
+              {activeTab === "orders" && "অর্ডার লিস্ট ও ক্যাশ মেমো"}
+              {activeTab === "users" && "কাস্টমার ডাটাবেজ ও প্রোফাইল"}
+              {activeTab === "courier" && "কুরিয়ার সার্ভিস ও ট্র্যাকিং সেটআপ"}
+              {activeTab === "pixel" && "Facebook Pixel & Events Setup"}
+              {activeTab === "settings" && "লোগো ও জেনারেল সেটিংস"}
             </h1>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs text-stone-500 hidden sm:inline">অ্যাডমিন মোড সক্রিয়</span>
+            <span className="text-xs text-stone-500 hidden sm:inline">
+              অ্যাডমিন মোড সক্রিয়
+            </span>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               className="px-3.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer border border-stone-200"
             >
               <Eye className="w-3.5 h-3.5 text-emerald-700" />
@@ -979,14 +1055,16 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         <div className="p-4 sm:p-6 max-w-7xl w-full mx-auto">
-          {activeTab === 'dashboard' && <AdminDashboard onNavigateTab={setActiveTab} />}
-          {activeTab === 'products' && <AdminProducts />}
-          {activeTab === 'banners' && <AdminBanners />}
-          {activeTab === 'orders' && <AdminOrders />}
-          {activeTab === 'users' && <AdminUsers />}
-          {activeTab === 'courier' && <AdminCourier />}
-          {activeTab === 'pixel' && <AdminPixel />}
-          {activeTab === 'settings' && <AdminSettings />}
+          {activeTab === "dashboard" && (
+            <AdminDashboard onNavigateTab={setActiveTab} />
+          )}
+          {activeTab === "products" && <AdminProducts />}
+          {activeTab === "banners" && <AdminBanners />}
+          {activeTab === "orders" && <AdminOrders />}
+          {activeTab === "users" && <AdminUsers />}
+          {activeTab === "courier" && <AdminCourier />}
+          {activeTab === "pixel" && <AdminPixel />}
+          {activeTab === "settings" && <AdminSettings />}
         </div>
       </main>
     </div>

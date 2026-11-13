@@ -1,0 +1,6 @@
+{
+  "name": "FoodGhor - Premium Organic Food & E-Commerce",
+  "description": "Premium organic food e-commerce platform with high-converting sales funnel landing pages, courier tracking, Facebook pixel setup, and hidden admin portal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

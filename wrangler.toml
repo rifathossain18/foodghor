@@ -1,11 +1,16 @@
+
 name = "foodghor"
-compatibility_date = "2026-11-13" 
-
-
-pages_build_output_dir = "./dist"
+main = "src/index.ts"                
+compatibility_date = "2024-11-01"
 
 
 [[d1_databases]]
-binding = "DB" 
-database_name = "foodghor-db" 
-database_id = "a7a19ffc-08c3-4260-a60b-9cbeff09fd61" 
+binding = "DB"
+database_name = "foodghor-db"
+database_id = "a7a19ffc-08c3-4260-a60b-9cbeff09fd61" # আপনার D1 ID
+
+
+[assets]
+directory = "./dist"
+
+run_worker_first = ["/api/*"] 

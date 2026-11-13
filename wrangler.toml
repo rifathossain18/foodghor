@@ -1,0 +1,11 @@
+name = "foodghor-app"
+compatibility_date = "2026-11-13" 
+
+
+pages_build_output_dir = "./dist"
+
+
+[[d1_databases]]
+binding = "DB" 
+database_name = "foodghor-db" 
+database_id = "a7a19ffc-08c3-4260-a60b-9cbeff09fd61" 

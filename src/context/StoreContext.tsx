@@ -9,151 +9,153 @@ import {
   initialUsers,
 } from '../data/initialData';
 import {
-  Banner,
-  CourierConfig,
-  Order,
-  OrderItem,
-  PixelConfig,
-  PixelEventLog,
-  Product,
-  ReviewItem,
-  StoreSettings,
-  UserProfile,
+  Banner, CourierConfig, Order, OrderItem, PixelConfig, PixelEventLog,
+  Product, ReviewItem, StoreSettings, UserProfile,
 } from '../types';
+import { api } from '../lib/api';
 
 interface StoreContextType {
-  products: Product[];
-  banners: Banner[];
-  orders: Order[];
-  users: UserProfile[];
+  isLoading: boolean;
+  cloudError: string | null;
+  products: Product[]; banners: Banner[]; orders: Order[]; users: UserProfile[];
   currentUser: UserProfile | null;
-  courierConfig: CourierConfig;
-  pixelConfig: PixelConfig;
-  pixelLogs: PixelEventLog[];
-  settings: StoreSettings;
-  cart: OrderItem[];
-  isCartOpen: boolean;
-  isTrackingOpen: boolean;
-  isAuthModalOpen: boolean;
-  currentPath: string;
-  activeProductSlug: string | null;
+  courierConfig: CourierConfig; pixelConfig: PixelConfig; pixelLogs: PixelEventLog[];
+  settings: StoreSettings; cart: OrderItem[];
+  isCartOpen: boolean; isTrackingOpen: boolean; isAuthModalOpen: boolean;
+  currentPath: string; activeProductSlug: string | null;
   lastPlacedOrder: Order | null;
-  setIsCartOpen: (open: boolean) => void;
-  setIsTrackingOpen: (open: boolean) => void;
-  setIsAuthModalOpen: (open: boolean) => void;
-  setLastPlacedOrder: (order: Order | null) => void;
-  navigate: (path: string) => void;
-  // User Authentication
+  setIsCartOpen: (v: boolean) => void;
+  setIsTrackingOpen: (v: boolean) => void;
+  setIsAuthModalOpen: (v: boolean) => void;
+  setLastPlacedOrder: (o: Order | null) => void;
+  navigate: (p: string) => void;
   registerUser: (name: string, phone: string, email: string, address?: string, city?: 'Inside Dhaka' | 'Outside Dhaka') => UserProfile;
-  loginUser: (phoneOrEmail: string) => UserProfile | null;
+  loginUser: (id: string) => UserProfile | null;
   logoutUser: () => void;
-  updateUserProfile: (user: UserProfile) => void;
+  updateUserProfile: (u: UserProfile) => void;
   deleteUser: (id: string) => void;
-  // Product actions
-  addProduct: (product: Product) => void;
-  updateProduct: (product: Product) => void;
+  addProduct: (p: Product) => void;
+  updateProduct: (p: Product) => void;
   deleteProduct: (id: string) => void;
-  getProductBySlug: (slug: string) => Product | undefined;
-  // Reviews
-  addReview: (review: Omit<ReviewItem, 'id' | 'date' | 'status'>) => ReviewItem;
-  updateReviewStatus: (productId: string, reviewId: string, status: 'Approved' | 'Pending') => void;
-  deleteReview: (productId: string, reviewId: string) => void;
-  // Banner actions
-  updateBanner: (banner: Banner) => void;
-  addBanner: (banner: Omit<Banner, 'id'>) => boolean;
+  getProductBySlug: (s: string) => Product | undefined;
+  addReview: (r: Omit<ReviewItem, 'id' | 'date' | 'status'>) => ReviewItem;
+  updateReviewStatus: (pid: string, rid: string, s: 'Approved' | 'Pending') => void;
+  deleteReview: (pid: string, rid: string) => void;
+  updateBanner: (b: Banner) => void;
+  addBanner: (b: Omit<Banner, 'id'>) => boolean;
   deleteBanner: (id: string) => void;
-  // Order actions
-  placeOrder: (orderData: Omit<Order, 'id' | 'createdAt' | 'status' | 'trackingHistory'>) => Order;
-  updateOrderStatus: (orderId: string, status: Order['status'], note?: string) => void;
-  assignCourierTracking: (orderId: string, courierName: string, trackingCode: string, note?: string) => void;
-  // Courier & Pixel actions
-  updateCourierConfig: (config: CourierConfig) => void;
-  updatePixelConfig: (config: PixelConfig) => void;
+  placeOrder: (o: Omit<Order, 'id' | 'createdAt' | 'status' | 'trackingHistory'>) => Order;
+  updateOrderStatus: (id: string, s: Order['status'], note?: string) => void;
+  assignCourierTracking: (id: string, c: string, t: string, note?: string) => void;
+  updateCourierConfig: (c: CourierConfig) => void;
+  updatePixelConfig: (c: PixelConfig) => void;
   clearPixelLogs: () => void;
-  firePixelEvent: (eventName: string, data?: Record<string, unknown>) => void;
-  // Store Settings actions
-  updateSettings: (newSettings: StoreSettings) => void;
-  // Cart actions
-  addToCart: (item: OrderItem) => void;
-  removeFromCart: (productId: string, packageId?: string) => void;
-  updateCartQuantity: (productId: string, packageId: string | undefined, delta: number) => void;
+  firePixelEvent: (n: string, d?: Record<string, unknown>) => void;
+  updateSettings: (s: StoreSettings) => void;
+  addToCart: (i: OrderItem) => void;
+  removeFromCart: (pid: string, pkid?: string) => void;
+  updateCartQuantity: (pid: string, pkid: string | undefined, d: number) => void;
   clearCart: () => void;
-  cartTotal: number;
-  cartCount: number;
+  cartTotal: number; cartCount: number;
 }
 
-const StoreContext = createContext<StoreContextType | undefined>(undefined);
+const Ctx = createContext<StoreContextType | undefined>(undefined);
 
-// Helper for local storage retrieval
-function loadStorage<T>(key: string, fallback: T): T {
-  try {
-    const item = localStorage.getItem(`foodghor_${key}`);
-    return item ? JSON.parse(item) : fallback;
-  } catch (e) {
-    console.error(`Error loading ${key} from storage:`, e);
-    return fallback;
-  }
-}
-
-function saveStorage<T>(key: string, value: T) {
-  try {
-    localStorage.setItem(`foodghor_${key}`, JSON.stringify(value));
-  } catch (e) {
-    console.error(`Error saving ${key} to storage:`, e);
-  }
-}
+// LocalStorage only for CART and currentUser (session-level UI)
+const ls = {
+  get<T>(k: string, f: T): T {
+    try { const v = localStorage.getItem('foodghor_' + k); return v ? JSON.parse(v) : f; }
+    catch { return f; }
+  },
+  set(k: string, v: any) {
+    try { localStorage.setItem('foodghor_' + k, JSON.stringify(v)); } catch {}
+  },
+};
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<Product[]>(() => loadStorage('products', initialProducts));
-  const [banners, setBanners] = useState<Banner[]>(() => loadStorage('banners', initialBanners));
-  const [orders, setOrders] = useState<Order[]>(() => loadStorage('orders', initialOrders));
-  const [users, setUsers] = useState<UserProfile[]>(() => loadStorage('users', initialUsers));
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => loadStorage('current_user', null));
-  const [courierConfig, setCourierConfig] = useState<CourierConfig>(() =>
-    loadStorage('courierConfig', initialCourierConfig)
-  );
-  const [pixelConfig, setPixelConfig] = useState<PixelConfig>(() =>
-    loadStorage('pixelConfig', initialPixelConfig)
-  );
-  const [settings, setSettings] = useState<StoreSettings>(() => loadStorage('settings', initialSettings));
-  const [cart, setCart] = useState<OrderItem[]>(() => loadStorage('cart', []));
-  const [pixelLogs, setPixelLogs] = useState<PixelEventLog[]>(() => loadStorage('pixelLogs', []));
+  const [isLoading, setIsLoading] = useState(true);
+  const [cloudError, setCloudError] = useState<string | null>(null);
+
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [banners, setBanners] = useState<Banner[]>(initialBanners);
+  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [users, setUsers] = useState<UserProfile[]>(initialUsers);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => ls.get('current_user', null));
+  const [courierConfig, setCourierConfig] = useState<CourierConfig>(initialCourierConfig);
+  const [pixelConfig, setPixelConfig] = useState<PixelConfig>(initialPixelConfig);
+  const [settings, setSettings] = useState<StoreSettings>(initialSettings);
+  const [cart, setCart] = useState<OrderItem[]>(() => ls.get('cart', []));
+  const [pixelLogs, setPixelLogs] = useState<PixelEventLog[]>([]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [lastPlacedOrder, setLastPlacedOrder] = useState<Order | null>(null);
 
-  // Routing state based on window.location
   const [currentPath, setCurrentPath] = useState<string>(() => {
-    const pathname = window.location.pathname;
-    const hash = window.location.hash;
-    if (hash.startsWith('#/')) {
-      return hash.slice(1);
-    }
-    if (hash === '#admin') return '/admin';
-    return pathname || '/';
+    const h = window.location.hash;
+    if (h.startsWith('#/')) return h.slice(1);
+    if (h === '#admin') return '/admin';
+    return window.location.pathname || '/';
   });
 
-  // Sync route on popstate and hashchange
+  // ---- Initial load from Cloudflare D1 ----
   useEffect(() => {
-    const handleLocationChange = () => {
-      const hash = window.location.hash;
-      const path = window.location.pathname;
-      if (hash.startsWith('#/')) {
-        setCurrentPath(hash.slice(1));
-      } else if (hash === '#admin') {
-        setCurrentPath('/admin');
-      } else {
-        setCurrentPath(path || '/');
-      }
-    };
+    let cancelled = false;
+    (async () => {
+      try {
+        const [prod, ban, ord, usr, st, cr, px] = await Promise.all([
+          api.products.list().catch(() => null),
+          api.banners.list().catch(() => null),
+          api.orders.list().catch(() => null),
+          api.users.list().catch(() => null),
+          api.settings.get().catch(() => null),
+          api.courier.get().catch(() => null),
+          api.pixel.get().catch(() => null),
+        ]);
+        if (cancelled) return;
 
-    window.addEventListener('popstate', handleLocationChange);
-    window.addEventListener('hashchange', handleLocationChange);
+        // If settings returned successfully → we're in Cloudflare mode
+        if (st !== null) {
+          if (prod) setProducts(prod);
+          if (ban) setBanners(ban);
+          if (ord) setOrders(ord);
+          if (usr) setUsers(usr);
+          setSettings(st);
+          if (cr) setCourierConfig(cr);
+          if (px) setPixelConfig(px);
+          setCloudError(null);
+        } else {
+          throw new Error('Settings API did not respond');
+        }
+      } catch (e: any) {
+        if (cancelled) return;
+        setCloudError(e?.message || 'Cloud database not reachable');
+        console.warn('[StoreContext] Cloud load failed — using defaults:', e?.message);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Persist cart + currentUser locally (UI state, not data)
+  useEffect(() => ls.set('cart', cart), [cart]);
+  useEffect(() => ls.set('current_user', currentUser), [currentUser]);
+
+  // Route sync
+  useEffect(() => {
+    const h = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#/')) setCurrentPath(hash.slice(1));
+      else if (hash === '#admin') setCurrentPath('/admin');
+      else setCurrentPath(window.location.pathname || '/');
+    };
+    window.addEventListener('popstate', h);
+    window.addEventListener('hashchange', h);
     return () => {
-      window.removeEventListener('popstate', handleLocationChange);
-      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('popstate', h);
+      window.removeEventListener('hashchange', h);
     };
   }, []);
 
@@ -168,490 +170,278 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Determine active product slug if path is /product/:slug
-  const productMatch = currentPath.match(/^\/product\/([^/?#]+)/);
-  const activeProductSlug = productMatch ? productMatch[1] : null;
+  const match = currentPath.match(/^\/product\/([^/?#]+)/);
+  const activeProductSlug = match ? match[1] : null;
 
-  // Persist states
-  useEffect(() => saveStorage('products', products), [products]);
-  useEffect(() => saveStorage('banners', banners), [banners]);
-  useEffect(() => saveStorage('orders', orders), [orders]);
-  useEffect(() => saveStorage('users', users), [users]);
-  useEffect(() => saveStorage('current_user', currentUser), [currentUser]);
-  useEffect(() => saveStorage('courierConfig', courierConfig), [courierConfig]);
-  useEffect(() => saveStorage('pixelConfig', pixelConfig), [pixelConfig]);
-  useEffect(() => saveStorage('settings', settings), [settings]);
-  useEffect(() => saveStorage('cart', cart), [cart]);
-  useEffect(() => saveStorage('pixelLogs', pixelLogs), [pixelLogs]);
+  // --- Helper: fire-and-forget API sync ---
+  const syncErr = (label: string) => (e: any) =>
+    console.error(`[Sync ${label}]`, e?.message || e);
 
-  // User Authentication
-  const registerUser = (
-    name: string,
-    phone: string,
-    email: string,
-    address?: string,
-    city: 'Inside Dhaka' | 'Outside Dhaka' = 'Inside Dhaka'
-  ): UserProfile => {
-    // Check if user with phone or email already exists
+  // ============ Users ============
+  const registerUser = (name: string, phone: string, email: string, address?: string, city: 'Inside Dhaka' | 'Outside Dhaka' = 'Inside Dhaka'): UserProfile => {
     const existing = users.find(
-      (u) =>
-        u.phone.replace(/[^0-9]/g, '') === phone.replace(/[^0-9]/g, '') ||
+      (u) => u.phone.replace(/\D/g, '') === phone.replace(/\D/g, '') ||
         u.email.toLowerCase() === email.toLowerCase()
     );
-
     if (existing) {
-      const updatedUser = {
-        ...existing,
-        name: name || existing.name,
-        address: address || existing.address,
-        city: city || existing.city,
-      };
-      setUsers((prev) => prev.map((u) => (u.id === existing.id ? updatedUser : u)));
-      setCurrentUser(updatedUser);
-      return updatedUser;
+      const updated = { ...existing, name: name || existing.name, address: address || existing.address, city: city || existing.city };
+      setUsers((p) => p.map((u) => (u.id === existing.id ? updated : u)));
+      setCurrentUser(updated);
+      api.users.save(updated).catch(syncErr('user-update'));
+      return updated;
     }
-
     const newUser: UserProfile = {
-      id: `u-${Date.now()}`,
-      name: name.trim(),
-      phone: phone.trim(),
-      email: email.trim().toLowerCase(),
-      address: address?.trim(),
-      city,
-      createdAt: new Date().toISOString(),
-      totalOrders: 0,
-      totalSpent: 0,
-      status: 'Active',
+      id: `u-${Date.now()}`, name: name.trim(), phone: phone.trim(),
+      email: email.trim().toLowerCase(), address: address?.trim(),
+      city, createdAt: new Date().toISOString(),
+      totalOrders: 0, totalSpent: 0, status: 'Active',
     };
-
-    setUsers((prev) => [newUser, ...prev]);
+    setUsers((p) => [newUser, ...p]);
     setCurrentUser(newUser);
+    api.users.save(newUser).catch(syncErr('user-create'));
     return newUser;
   };
 
-  const loginUser = (phoneOrEmail: string): UserProfile | null => {
-    const clean = phoneOrEmail.trim().toLowerCase();
-    const cleanPhone = clean.replace(/[^0-9]/g, '');
+  const loginUser = (id: string) => {
+    const c = id.trim().toLowerCase();
+    const cPhone = c.replace(/\D/g, '');
     const found = users.find(
-      (u) =>
-        (cleanPhone && u.phone.replace(/[^0-9]/g, '').includes(cleanPhone)) ||
-        u.email.toLowerCase() === clean
+      (u) => (cPhone && u.phone.replace(/\D/g, '').includes(cPhone)) || u.email.toLowerCase() === c
     );
-    if (found) {
-      setCurrentUser(found);
-      return found;
-    }
+    if (found) { setCurrentUser(found); return found; }
     return null;
   };
 
-  const logoutUser = () => {
-    setCurrentUser(null);
-  };
+  const logoutUser = () => setCurrentUser(null);
 
-  const updateUserProfile = (updated: UserProfile) => {
-    setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-    if (currentUser?.id === updated.id) {
-      setCurrentUser(updated);
-    }
+  const updateUserProfile = (u: UserProfile) => {
+    setUsers((p) => p.map((x) => (x.id === u.id ? u : x)));
+    if (currentUser?.id === u.id) setCurrentUser(u);
+    api.users.save(u).catch(syncErr('user-save'));
   };
 
   const deleteUser = (id: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-    if (currentUser?.id === id) {
-      setCurrentUser(null);
-    }
+    setUsers((p) => p.filter((u) => u.id !== id));
+    if (currentUser?.id === id) setCurrentUser(null);
+    api.users.remove(id).catch(syncErr('user-del'));
   };
 
-  // Review Actions
-  const addReview = (reviewData: Omit<ReviewItem, 'id' | 'date' | 'status'>): ReviewItem => {
-    const newRev: ReviewItem = {
-      ...reviewData,
-      id: `rev-${Date.now()}`,
-      date: 'আজকে',
-      status: 'Approved',
-      verified: true,
-    };
-
+  // ============ Reviews ============
+  const addReview = (data: Omit<ReviewItem, 'id' | 'date' | 'status'>): ReviewItem => {
+    const rev: ReviewItem = { ...data, id: `rev-${Date.now()}`, date: 'আজকে', status: 'Approved', verified: true };
     setProducts((prev) =>
-      prev.map((p) => {
-        if (p.id === reviewData.productId || p.slug === reviewData.productId) {
-          return {
-            ...p,
-            landingConfig: {
-              ...p.landingConfig,
-              reviews: [newRev, ...(p.landingConfig.reviews || [])],
-            },
-          };
-        }
-        return p;
-      })
+      prev.map((p) => p.id === data.productId || p.slug === data.productId ? {
+        ...p,
+        landingConfig: { ...p.landingConfig, reviews: [rev, ...(p.landingConfig.reviews || [])] },
+      } : p)
     );
-
-    return newRev;
+    // Save updated product
+    setTimeout(() => {
+      const prod = products.find((p) => p.id === data.productId || p.slug === data.productId);
+      if (prod) {
+        const upd = { ...prod, landingConfig: { ...prod.landingConfig, reviews: [rev, ...(prod.landingConfig.reviews || [])] } };
+        api.products.save(upd).catch(syncErr('review'));
+      }
+    }, 50);
+    return rev;
   };
 
-  const updateReviewStatus = (productId: string, reviewId: string, status: 'Approved' | 'Pending') => {
-    setProducts((prev) =>
-      prev.map((p) => {
-        if (p.id === productId || p.slug === productId) {
-          const updatedRevs = p.landingConfig.reviews.map((r) =>
-            r.id === reviewId ? { ...r, status } : r
-          );
-          return { ...p, landingConfig: { ...p.landingConfig, reviews: updatedRevs } };
-        }
-        return p;
-      })
-    );
+  const updateReviewStatus = (pid: string, rid: string, status: 'Approved' | 'Pending') => {
+    setProducts((prev) => prev.map((p) => {
+      if (p.id !== pid && p.slug !== pid) return p;
+      const upd = { ...p, landingConfig: { ...p.landingConfig, reviews: p.landingConfig.reviews.map((r) => r.id === rid ? { ...r, status } : r) } };
+      api.products.save(upd).catch(syncErr('review-status'));
+      return upd;
+    }));
   };
 
-  const deleteReview = (productId: string, reviewId: string) => {
-    setProducts((prev) =>
-      prev.map((p) => {
-        if (p.id === productId || p.slug === productId) {
-          const updatedRevs = p.landingConfig.reviews.filter((r) => r.id !== reviewId);
-          return { ...p, landingConfig: { ...p.landingConfig, reviews: updatedRevs } };
-        }
-        return p;
-      })
-    );
+  const deleteReview = (pid: string, rid: string) => {
+    setProducts((prev) => prev.map((p) => {
+      if (p.id !== pid && p.slug !== pid) return p;
+      const upd = { ...p, landingConfig: { ...p.landingConfig, reviews: p.landingConfig.reviews.filter((r) => r.id !== rid) } };
+      api.products.save(upd).catch(syncErr('review-del'));
+      return upd;
+    }));
   };
 
-  // Facebook Pixel firing engine
-  const firePixelEvent = (eventName: string, data: Record<string, unknown> = {}) => {
+  // ============ Pixel ============
+  const firePixelEvent = (name: string, data: Record<string, unknown> = {}) => {
     if (!pixelConfig.isEnabled) return;
-
-    if (eventName === 'PageView' && !pixelConfig.trackPageView) return;
-    if (eventName === 'ViewContent' && !pixelConfig.trackViewContent) return;
-    if (eventName === 'AddToCart' && !pixelConfig.trackAddToCart) return;
-    if (eventName === 'InitiateCheckout' && !pixelConfig.trackInitiateCheckout) return;
-    if (eventName === 'Purchase' && !pixelConfig.trackPurchase) return;
-
-    const newLog: PixelEventLog = {
-      id: `px-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      eventName,
-      timestamp: new Date().toLocaleTimeString('en-US', {
-        hour12: true,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      }),
+    if (name === 'PageView' && !pixelConfig.trackPageView) return;
+    if (name === 'ViewContent' && !pixelConfig.trackViewContent) return;
+    if (name === 'AddToCart' && !pixelConfig.trackAddToCart) return;
+    if (name === 'InitiateCheckout' && !pixelConfig.trackInitiateCheckout) return;
+    if (name === 'Purchase' && !pixelConfig.trackPurchase) return;
+    const log: PixelEventLog = {
+      id: `px-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      eventName: name,
+      timestamp: new Date().toLocaleTimeString('en-US', { hour12: true }),
       data,
     };
-
-    setPixelLogs((prev) => [newLog, ...prev.slice(0, 49)]);
-
-    try {
-      const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
-      if (typeof fbq === 'function') {
-        fbq('track', eventName, data);
-      }
-    } catch {
-      // Ignored
-    }
+    setPixelLogs((prev) => [log, ...prev.slice(0, 49)]);
+    try { (window as any).fbq?.('track', name, data); } catch {}
   };
 
-  useEffect(() => {
-    firePixelEvent('PageView', { path: currentPath });
-  }, [currentPath]);
+  useEffect(() => { firePixelEvent('PageView', { path: currentPath }); }, [currentPath]);
 
-  // Products CRUD
-  const addProduct = (newProduct: Product) => {
-    setProducts((prev) => [newProduct, ...prev]);
+  // ============ Products ============
+  const addProduct = (p: Product) => {
+    setProducts((prev) => [p, ...prev]);
+    api.products.save(p).catch(syncErr('product-add'));
   };
-
-  const updateProduct = (updated: Product) => {
-    setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  const updateProduct = (p: Product) => {
+    setProducts((prev) => prev.map((x) => x.id === p.id ? p : x));
+    api.products.save(p).catch(syncErr('product-update'));
   };
-
   const deleteProduct = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setProducts((prev) => prev.filter((x) => x.id !== id));
+    api.products.remove(id).catch(syncErr('product-del'));
   };
+  const getProductBySlug = (s: string) => products.find((p) => p.slug === s);
 
-  const getProductBySlug = (slug: string) => {
-    return products.find((p) => p.slug === slug);
+  // ============ Banners ============
+  const updateBanner = (b: Banner) => {
+    setBanners((prev) => prev.map((x) => x.id === b.id ? b : x));
+    api.banners.save(b).catch(syncErr('banner-update'));
   };
-
-  // Banner actions (max 5 banners)
-  const updateBanner = (updated: Banner) => {
-    setBanners((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
-  };
-
-  const addBanner = (bannerData: Omit<Banner, 'id'>): boolean => {
-    if (banners.length >= 5) {
-      return false;
-    }
-    const newBanner: Banner = {
-      ...bannerData,
-      id: `b-${Date.now()}`,
-      order: banners.length + 1,
-    };
-    setBanners((prev) => [...prev, newBanner]);
+  const addBanner = (data: Omit<Banner, 'id'>): boolean => {
+    if (banners.length >= 5) return false;
+    const nb: Banner = { ...data, id: `b-${Date.now()}`, order: banners.length + 1 };
+    setBanners((prev) => [...prev, nb]);
+    api.banners.save(nb).catch(syncErr('banner-add'));
     return true;
   };
-
   const deleteBanner = (id: string) => {
     setBanners((prev) => prev.filter((b) => b.id !== id));
+    api.banners.remove(id).catch(syncErr('banner-del'));
   };
 
-  // Order actions
-  const placeOrder = (
-    orderData: Omit<Order, 'id' | 'createdAt' | 'status' | 'trackingHistory'>
-  ): Order => {
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const orderId = `FG-${randomNum}`;
-    const trackingCode = `${courierConfig.defaultCourier.slice(0, 2).toUpperCase()}-${Math.floor(
-      1000000 + Math.random() * 9000000
-    )}`;
-
+  // ============ Orders ============
+  const placeOrder = (data: Omit<Order, 'id' | 'createdAt' | 'status' | 'trackingHistory'>): Order => {
+    const oid = `FG-${Math.floor(1000 + Math.random() * 9000)}`;
+    const tc = `${courierConfig.defaultCourier.slice(0, 2).toUpperCase()}-${Math.floor(1e6 + Math.random() * 9e6)}`;
+    const now = new Date();
     const newOrder: Order = {
-      ...orderData,
-      id: orderId,
-      status: 'Pending',
-      courierName: courierConfig.defaultCourier,
-      trackingCode: courierConfig.autoGenerateTracking ? trackingCode : undefined,
-      createdAt: new Date().toISOString(),
-      trackingHistory: [
-        {
-          status: 'অর্ডার প্লেস করা হয়েছে',
-          timestamp: new Date().toLocaleDateString('bn-BD', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
-          note: 'অর্ডারটি সফলভাবে সিস্টেমে জমা হয়েছে। দ্রুত ভেরিফিকেশন করা হবে।',
-          location: 'FoodGhor Central Portal',
-        },
-      ],
+      ...data, id: oid, status: 'Pending', courierName: courierConfig.defaultCourier,
+      trackingCode: courierConfig.autoGenerateTracking ? tc : undefined,
+      createdAt: now.toISOString(),
+      trackingHistory: [{
+        status: 'অর্ডার প্লেস করা হয়েছে',
+        timestamp: now.toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        note: 'অর্ডারটি সফলভাবে সিস্টেমে জমা হয়েছে।',
+        location: 'FoodGhor',
+      }],
     };
-
     setOrders((prev) => [newOrder, ...prev]);
     setLastPlacedOrder(newOrder);
+    api.orders.save(newOrder).catch(syncErr('order'));
 
-    // If user is linked, update their purchase metrics
-    if (orderData.userId) {
-      setUsers((prev) =>
-        prev.map((u) => {
-          if (u.id === orderData.userId) {
-            return {
-              ...u,
-              totalOrders: (u.totalOrders || 0) + 1,
-              totalSpent: (u.totalSpent || 0) + newOrder.total,
-            };
-          }
-          return u;
-        })
-      );
-      if (currentUser?.id === orderData.userId) {
-        setCurrentUser((prev) =>
-          prev
-            ? {
-                ...prev,
-                totalOrders: (prev.totalOrders || 0) + 1,
-                totalSpent: (prev.totalSpent || 0) + newOrder.total,
-              }
-            : null
-        );
+    if (data.userId) {
+      setUsers((prev) => prev.map((u) => u.id === data.userId ? {
+        ...u, totalOrders: (u.totalOrders || 0) + 1, totalSpent: (u.totalSpent || 0) + newOrder.total,
+      } : u));
+      if (currentUser?.id === data.userId) {
+        setCurrentUser((p) => p ? { ...p, totalOrders: (p.totalOrders || 0) + 1, totalSpent: (p.totalSpent || 0) + newOrder.total } : null);
       }
+      const u = users.find((x) => x.id === data.userId);
+      if (u) api.users.save({ ...u, totalOrders: (u.totalOrders || 0) + 1, totalSpent: (u.totalSpent || 0) + newOrder.total }).catch(syncErr('user-order'));
     }
 
-    // Fire purchase pixel event
-    firePixelEvent('Purchase', {
-      orderId: newOrder.id,
-      value: newOrder.total,
-      currency: 'BDT',
-      itemsCount: newOrder.items.length,
-    });
-
+    firePixelEvent('Purchase', { orderId: oid, value: newOrder.total, currency: 'BDT' });
     return newOrder;
   };
 
-  const updateOrderStatus = (orderId: string, status: Order['status'], note?: string) => {
-    setOrders((prev) =>
-      prev.map((order) => {
-        if (order.id !== orderId) return order;
-        const statusBengaliMap: Record<Order['status'], string> = {
-          Pending: 'অপেক্ষমাণ',
-          Confirmed: 'অর্ডার নিশ্চিত করা হয়েছে',
-          Processing: 'প্যাকেজিং ও প্রসেসিং চলছে',
-          Shipped: 'কুরিয়ারে হস্তান্তর করা হয়েছে',
-          Delivered: 'সফলভাবে ডেলিভার্ড',
-          Cancelled: 'অর্ডার বাতিল করা হয়েছে',
-        };
-        const newHistory = [
-          ...order.trackingHistory,
-          {
-            status: statusBengaliMap[status],
-            timestamp: new Date().toLocaleDateString('bn-BD', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-            note: note || `অর্ডার স্ট্যাটাস পরিবর্তিত হয়ে '${statusBengaliMap[status]}' হয়েছে।`,
-            location: 'Central Warehouse / Dispatch Hub',
-          },
-        ];
-        return { ...order, status, trackingHistory: newHistory };
-      })
-    );
+  const updateOrderStatus = (id: string, status: Order['status'], note?: string) => {
+    setOrders((prev) => prev.map((o) => {
+      if (o.id !== id) return o;
+      const bnMap: Record<Order['status'], string> = {
+        Pending: 'অপেক্ষমাণ', Confirmed: 'নিশ্চিত', Processing: 'প্রসেসিং',
+        Shipped: 'কুরিয়ারে', Delivered: 'ডেলিভার্ড', Cancelled: 'বাতিল',
+      };
+      const upd: Order = { ...o, status, trackingHistory: [...o.trackingHistory, {
+        status: bnMap[status],
+        timestamp: new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        note: note || `স্ট্যাটাস: ${bnMap[status]}`,
+        location: 'Central Hub',
+      }]};
+      api.orders.save(upd).catch(syncErr('order-status'));
+      return upd;
+    }));
   };
 
-  const assignCourierTracking = (
-    orderId: string,
-    courierName: string,
-    trackingCode: string,
-    note?: string
-  ) => {
-    setOrders((prev) =>
-      prev.map((order) => {
-        if (order.id !== orderId) return order;
-        const newHistory = [
-          ...order.trackingHistory,
-          {
-            status: 'কুরিয়ারে হস্তান্তর ও ট্র্যাকিং কোড জেনারেট',
-            timestamp: new Date().toLocaleDateString('bn-BD', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-            note: note || `${courierName} কুরিয়ারে হস্তান্তর করা হয়েছে। ট্র্যাকিং কোড: ${trackingCode}`,
-            location: `${courierName} Hub`,
-          },
-        ];
-        return {
-          ...order,
-          courierName,
-          trackingCode,
-          status: 'Shipped' as const,
-          trackingHistory: newHistory,
-        };
-      })
-    );
+  const assignCourierTracking = (id: string, courier: string, code: string, note?: string) => {
+    setOrders((prev) => prev.map((o) => {
+      if (o.id !== id) return o;
+      const upd: Order = { ...o, courierName: courier, trackingCode: code, status: 'Shipped', trackingHistory: [...o.trackingHistory, {
+        status: 'কুরিয়ারে হস্তান্তর',
+        timestamp: new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        note: note || `${courier} → ${code}`,
+        location: `${courier} Hub`,
+      }]};
+      api.orders.save(upd).catch(syncErr('courier-assign'));
+      return upd;
+    }));
   };
 
-  // Config actions
-  const updateCourierConfig = (config: CourierConfig) => setCourierConfig(config);
-  const updatePixelConfig = (config: PixelConfig) => setPixelConfig(config);
+  // ============ Config ============
+  const updateCourierConfig = (c: CourierConfig) => {
+    setCourierConfig(c);
+    api.courier.save(c).catch(syncErr('courier'));
+  };
+  const updatePixelConfig = (c: PixelConfig) => {
+    setPixelConfig(c);
+    api.pixel.save(c).catch(syncErr('pixel'));
+  };
   const clearPixelLogs = () => setPixelLogs([]);
-  const updateSettings = (newSettings: StoreSettings) => setSettings(newSettings);
+  const updateSettings = (s: StoreSettings) => {
+    setSettings(s);
+    api.settings.save(s).catch(syncErr('settings'));
+  };
 
-  // Cart actions
+  // ============ Cart ============
   const addToCart = (item: OrderItem) => {
     setCart((prev) => {
-      const existingIndex = prev.findIndex(
-        (i) => i.productId === item.productId && i.packageId === item.packageId
-      );
-      if (existingIndex > -1) {
-        const copy = [...prev];
-        copy[existingIndex].quantity += item.quantity;
-        return copy;
-      }
+      const i = prev.findIndex((x) => x.productId === item.productId && x.packageId === item.packageId);
+      if (i > -1) { const c = [...prev]; c[i].quantity += item.quantity; return c; }
       return [...prev, item];
     });
-    firePixelEvent('AddToCart', {
-      product: item.productName,
-      price: item.price,
-      quantity: item.quantity,
-    });
+    firePixelEvent('AddToCart', { product: item.productName, price: item.price });
     setIsCartOpen(true);
   };
-
-  const removeFromCart = (productId: string, packageId?: string) => {
-    setCart((prev) =>
-      prev.filter(
-        (i) => !(i.productId === productId && (packageId ? i.packageId === packageId : true))
-      )
-    );
-  };
-
-  const updateCartQuantity = (productId: string, packageId: string | undefined, delta: number) => {
-    setCart((prev) =>
-      prev
-        .map((i) => {
-          if (i.productId === productId && (!packageId || i.packageId === packageId)) {
-            const newQty = i.quantity + delta;
-            return newQty > 0 ? { ...i, quantity: newQty } : null;
-          }
-          return i;
-        })
-        .filter(Boolean) as OrderItem[]
-    );
-  };
-
+  const removeFromCart = (pid: string, pkid?: string) =>
+    setCart((prev) => prev.filter((i) => !(i.productId === pid && (pkid ? i.packageId === pkid : true))));
+  const updateCartQuantity = (pid: string, pkid: string | undefined, d: number) =>
+    setCart((prev) => prev.map((i) => i.productId === pid && (!pkid || i.packageId === pkid)
+      ? (i.quantity + d > 0 ? { ...i, quantity: i.quantity + d } : null) : i
+    ).filter(Boolean) as OrderItem[]);
   const clearCart = () => setCart([]);
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
+  const cartTotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+  const cartCount = cart.reduce((c, i) => c + i.quantity, 0);
 
   return (
-    <StoreContext.Provider
-      value={{
-        products,
-        banners,
-        orders,
-        users,
-        currentUser,
-        courierConfig,
-        pixelConfig,
-        pixelLogs,
-        settings,
-        cart,
-        isCartOpen,
-        isTrackingOpen,
-        isAuthModalOpen,
-        currentPath,
-        activeProductSlug,
-        lastPlacedOrder,
-        setIsCartOpen,
-        setIsTrackingOpen,
-        setIsAuthModalOpen,
-        setLastPlacedOrder,
-        navigate,
-        registerUser,
-        loginUser,
-        logoutUser,
-        updateUserProfile,
-        deleteUser,
-        addProduct,
-        updateProduct,
-        deleteProduct,
-        getProductBySlug,
-        addReview,
-        updateReviewStatus,
-        deleteReview,
-        updateBanner,
-        addBanner,
-        deleteBanner,
-        placeOrder,
-        updateOrderStatus,
-        assignCourierTracking,
-        updateCourierConfig,
-        updatePixelConfig,
-        clearPixelLogs,
-        firePixelEvent,
-        updateSettings,
-        addToCart,
-        removeFromCart,
-        updateCartQuantity,
-        clearCart,
-        cartTotal,
-        cartCount,
-      }}
-    >
+    <Ctx.Provider value={{
+      isLoading, cloudError,
+      products, banners, orders, users, currentUser, courierConfig, pixelConfig,
+      pixelLogs, settings, cart, isCartOpen, isTrackingOpen, isAuthModalOpen,
+      currentPath, activeProductSlug, lastPlacedOrder,
+      setIsCartOpen, setIsTrackingOpen, setIsAuthModalOpen, setLastPlacedOrder,
+      navigate, registerUser, loginUser, logoutUser, updateUserProfile, deleteUser,
+      addProduct, updateProduct, deleteProduct, getProductBySlug,
+      addReview, updateReviewStatus, deleteReview,
+      updateBanner, addBanner, deleteBanner,
+      placeOrder, updateOrderStatus, assignCourierTracking,
+      updateCourierConfig, updatePixelConfig, clearPixelLogs, firePixelEvent,
+      updateSettings, addToCart, removeFromCart, updateCartQuantity, clearCart,
+      cartTotal, cartCount,
+    }}>
       {children}
-    </StoreContext.Provider>
+    </Ctx.Provider>
   );
 };
 
 export const useStore = () => {
-  const context = useContext(StoreContext);
-  if (!context) {
-    throw new Error('useStore must be used within a StoreProvider');
-  }
-  return context;
+  const c = useContext(Ctx);
+  if (!c) throw new Error('useStore must be inside StoreProvider');
+  return c;
 };

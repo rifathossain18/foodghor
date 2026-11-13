@@ -236,7 +236,39 @@ export default {
       }
     }
 
-    // Non-API → serve static React app
-    return env.ASSETS.fetch(request);
+    // ⚠️ SAFETY CHECK: env.ASSETS must exist
+    if (!env.ASSETS) {
+      console.error('CRITICAL: env.ASSETS is undefined!');
+      console.error('Fix: Add `binding = "ASSETS"` to [assets] in wrangler.toml');
+      return new Response(
+        `<html><body style="font-family:sans-serif;padding:2rem;max-width:600px;margin:0 auto">
+          <h1 style="color:#dc2626">⚠️ Static Assets Binding Missing</h1>
+          <p>The Worker is missing the <code>ASSETS</code> binding.</p>
+          <p><strong>Fix:</strong> Add this to your <code>wrangler.toml</code>:</p>
+          <pre style="background:#f5f5f5;padding:1rem;border-radius:8px">[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]</pre>
+          <p>Then run: <code>npm run build && npx wrangler deploy</code></p>
+          <p style="margin-top:2rem;color:#666;font-size:.9em">API still works: <a href="/api/health">/api/health</a></p>
+        </body></html>`,
+        {
+          status: 500,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        }
+      );
+    }
+
+    // Non-API → serve static React app via ASSETS binding
+    try {
+      return await env.ASSETS.fetch(request);
+    } catch (e: any) {
+      console.error('ASSETS.fetch failed:', e);
+      return new Response(`Static asset fetch failed: ${e?.message || 'Unknown'}`, {
+        status: 500,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      });
+    }
   },
 };
